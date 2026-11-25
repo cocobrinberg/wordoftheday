@@ -20,11 +20,14 @@ export const BACKGROUNDS = [
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 
-type Account = { username: string; background: string };
+type Account = { username: string; background: string; hobbies: string[] | null };
+
+export const HOBBY_COUNT = 5;
 
 type AccountContext = {
   account: Account;
   setBackground: (hex: string) => Promise<void>;
+  setHobbies: (hobbies: string[]) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -51,6 +54,9 @@ function applyBackground(hex: string) {
 }
 
 function friendly(message: string) {
+  if (message.includes("Could not find the function") && message.includes("set_hobbies")) {
+    return "Hobbies aren't set up in the database yet. Run supabase/hobbies.sql in Supabase.";
+  }
   if (message.includes("Could not find the function")) {
     return "Accounts aren't set up in the database yet. Run supabase/accounts.sql in Supabase.";
   }
@@ -109,6 +115,14 @@ export default function AccountGate({ children }: { children: ReactNode }) {
     }
   }
 
+  async function setHobbies(hobbies: string[]) {
+    if (!token || !account) return;
+    const { error } = await supabase.rpc("set_hobbies", { p_token: token, p_hobbies: hobbies });
+    if (error) throw new Error(friendly(error.message));
+    const { data } = await supabase.rpc("get_account", { p_token: token });
+    setAccount(data?.[0] ?? { ...account, hobbies });
+  }
+
   async function signOut() {
     if (token) await supabase.rpc("sign_out", { p_token: token });
     storage(TOKEN_KEY, null);
@@ -122,10 +136,24 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   }
   if (!account) return <AuthForm onSignedIn={signedIn} />;
 
-  const value = { account, setBackground, signOut };
+  const value = { account, setBackground, setHobbies, signOut };
+  const needsHobbies = (account.hobbies?.length ?? 0) < HOBBY_COUNT;
   return (
     <Ctx.Provider value={value}>
-      {pickingColor ? (
+      {needsHobbies ? (
+        <section className="mx-auto max-w-md">
+          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+            What do you love doing?
+          </h1>
+          <p className="mt-2 text-stone-600">
+            Tell us five of your hobbies and we&rsquo;ll pick words of the day that match your
+            interests.
+          </p>
+          <div className="mt-8">
+            <HobbiesForm submitLabel="Continue" />
+          </div>
+        </section>
+      ) : pickingColor ? (
         <section className="mx-auto max-w-md">
           <h1 className="font-serif text-3xl font-semibold tracking-tight">
             Welcome, {account.username}!
@@ -344,5 +372,84 @@ export function BackgroundPicker() {
       </label>
       {error && <p className="mt-3 text-sm text-rose-700">{error}</p>}
     </fieldset>
+  );
+}
+
+const HOBBY_EXAMPLES = ["cooking", "rock climbing", "chess", "gardening", "photography"];
+
+/** Five text boxes for hobbies, saved to the account. */
+export function HobbiesForm({
+  submitLabel = "Save hobbies",
+  onSaved,
+}: {
+  submitLabel?: string;
+  onSaved?: () => void;
+}) {
+  const { account, setHobbies } = useAccount();
+  const [values, setValues] = useState<string[]>(() =>
+    Array.from({ length: HOBBY_COUNT }, (_, i) => account.hobbies?.[i] ?? ""),
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const cleaned = values.map((v) => v.trim().toLowerCase());
+  const filled = cleaned.filter(Boolean);
+  const unique = new Set(filled).size === filled.length;
+  const canSubmit = !busy && filled.length === HOBBY_COUNT && unique;
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setBusy(true);
+    setError(null);
+    setSaved(false);
+    try {
+      await setHobbies(cleaned);
+      setSaved(true);
+      onSaved?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      {values.map((v, i) => (
+        <label key={i} className="flex items-center gap-3">
+          <span className="w-5 text-right text-sm font-medium text-stone-400">{i + 1}</span>
+          <input
+            value={v}
+            onChange={(e) => {
+              const next = [...values];
+              next[i] = e.target.value;
+              setValues(next);
+              setSaved(false);
+            }}
+            placeholder={`e.g. ${HOBBY_EXAMPLES[i]}`}
+            aria-label={`Hobby ${i + 1}`}
+            maxLength={40}
+            required
+            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10"
+          />
+        </label>
+      ))}
+      {!unique && <p className="text-sm text-amber-700">Each hobby should be different.</p>}
+      {error && (
+        <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
+          {error}
+        </p>
+      )}
+      <button
+        type="submit"
+        disabled={!canSubmit}
+        className="mt-3 w-full rounded-full bg-stone-900 px-4 py-2.5 font-medium text-stone-50 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {busy ? "Saving…" : submitLabel}
+      </button>
+      {saved && !onSaved && <p className="text-center text-sm text-emerald-700">Saved.</p>}
+    </form>
   );
 }
