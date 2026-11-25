@@ -21,8 +21,12 @@ export async function translateText(text: string, lang: string): Promise<string>
     responseDetails?: string;
     quotaFinished?: boolean;
     responseData?: { translatedText?: string };
+    matches?: { translation?: string; "created-by"?: string }[];
   };
-  const translated = body.responseData?.translatedText;
+  // The top result can be a crowd-sourced entry that is wrong or left in English
+  // (e.g. "mellifluous" -> "Mellifluous."). Prefer the machine translation when there is one.
+  const machine = body.matches?.find((m) => m["created-by"] === "MT!")?.translation?.trim();
+  const translated = machine || body.responseData?.translatedText;
   if (
     Number(body.responseStatus) !== 200 ||
     body.quotaFinished ||

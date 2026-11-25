@@ -1,8 +1,12 @@
+import { pinyin } from "pinyin-pro";
 import { supabase, type Word } from "@/lib/supabase";
 import { ENGLISH, findLanguage } from "@/lib/languages";
 import { translateText } from "@/lib/translate";
 
-export type TranslatedWord = Pick<Word, "word" | "part_of_speech" | "definition" | "example">;
+export type TranslatedWord = Pick<Word, "word" | "part_of_speech" | "definition" | "example"> & {
+  /** Romanization of the word, for Mandarin only. */
+  pinyin?: string;
+};
 
 /** GET /api/translate?id=<word id>&lang=<language code> */
 export async function GET(request: Request) {
@@ -32,6 +36,7 @@ export async function GET(request: Request) {
       definition: word.definition,
       example,
     };
+    if (lang.code.startsWith("zh")) result.pinyin = pinyin(w);
     return Response.json(result);
   } catch (e) {
     return Response.json(

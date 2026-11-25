@@ -79,6 +79,11 @@ export default function Home() {
               <h1 className="break-words font-serif text-5xl font-semibold tracking-tight sm:text-6xl">
                 {shown.word}
               </h1>
+              {"pinyin" in shown && shown.pinyin && (
+                <p lang="zh-Latn-pinyin" className="mt-2 text-2xl tracking-wide text-amber-700">
+                  {shown.pinyin}
+                </p>
+              )}
               <p className="mt-2 font-serif text-lg italic text-stone-500">
                 {shown.part_of_speech}
                 {!isEnglish && (
