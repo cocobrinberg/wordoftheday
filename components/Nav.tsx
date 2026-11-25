@@ -12,7 +12,7 @@ const links = [
 export default function Nav() {
   const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-10 border-b border-stone-200 bg-stone-50/90 backdrop-blur">
+    <header className="sticky top-0 z-10 border-b border-stone-200 bg-pink-50/90 backdrop-blur">
       <nav className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3">
         <Link href="/" className="font-serif text-lg font-semibold tracking-tight text-stone-900">
           Word of the Day
