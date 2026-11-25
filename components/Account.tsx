@@ -26,6 +26,8 @@ export const HOBBY_COUNT = 5;
 
 type AccountContext = {
   account: Account;
+  /** Session token for calls that act as this account. */
+  token: string;
   setBackground: (hex: string) => Promise<void>;
   setHobbies: (hobbies: string[]) => Promise<void>;
   signOut: () => Promise<void>;
@@ -136,7 +138,7 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   }
   if (!account) return <AuthForm onSignedIn={signedIn} />;
 
-  const value = { account, setBackground, setHobbies, signOut };
+  const value = { account, token: token!, setBackground, setHobbies, signOut };
   const needsHobbies = (account.hobbies?.length ?? 0) < HOBBY_COUNT;
   return (
     <Ctx.Provider value={value}>
