@@ -22,12 +22,16 @@ export async function GET(request: Request) {
   if (!word) return Response.json({ error: "Word not found" }, { status: 404 });
 
   try {
-    const [w, pos, definition, example] = await Promise.all(
-      [word.word, word.part_of_speech, word.definition, word.example ?? ""].map((t) =>
-        translateText(t, lang.code),
-      ),
+    // The definition always stays in English; everything else is translated.
+    const [w, pos, example] = await Promise.all(
+      [word.word, word.part_of_speech, word.example ?? ""].map((t) => translateText(t, lang.code)),
     );
-    const result: TranslatedWord = { word: w, part_of_speech: pos, definition, example };
+    const result: TranslatedWord = {
+      word: w,
+      part_of_speech: pos,
+      definition: word.definition,
+      example,
+    };
     return Response.json(result);
   } catch (e) {
     return Response.json(

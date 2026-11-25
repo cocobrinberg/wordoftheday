@@ -88,7 +88,9 @@ export default function Home() {
                   </span>
                 )}
               </p>
-              <p className="mt-8 text-xl leading-relaxed text-stone-800">{shown.definition}</p>
+              <p lang="en" dir="ltr" className="mt-8 text-xl leading-relaxed text-stone-800">
+                {shown.definition}
+              </p>
               {shown.example && (
                 <blockquote
                   className={`mt-8 font-serif text-lg italic leading-relaxed text-stone-600 ${
