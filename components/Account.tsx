@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const TOKEN_KEY = "wotd-session";
@@ -73,6 +74,7 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [account, setAccount] = useState<Account | null | undefined>(undefined);
   const [pickingColor, setPickingColor] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const saved = storage(BG_KEY);
@@ -102,6 +104,10 @@ export default function AccountGate({ children }: { children: ReactNode }) {
     setAccount(data[0]);
     applyBackground(data[0].background);
     setPickingColor(isNew);
+    // Land on the Today tab once setup (hobbies, background) is finished.
+    // The gate keeps showing the setup screens until then, so switching the
+    // URL now means the first page the user sees afterwards is Today.
+    router.replace("/");
   }
 
   async function setBackground(hex: string) {
