@@ -61,19 +61,23 @@ export async function fetchPastWords(): Promise<Word[]> {
   return data ?? [];
 }
 
-/** Shown when the stats functions haven't been added to the database yet. */
-function statsError(e: { message: string }): Error {
-  if (e.message.includes("Could not find the function")) {
-    return new Error("Quiz scores aren't set up in the database yet. Run supabase/stats.sql in Supabase.");
-  }
-  return new Error(e.message);
+/**
+ * True when a database function from supabase/stats.sql isn't there yet.
+ * Until that script is run, quiz answers fall back to the older shared table
+ * so the quiz and the Stats tab keep working.
+ */
+function missingFunction(e: { code?: string; message: string }): boolean {
+  return e.code === "PGRST202" || e.message.includes("Could not find the function");
 }
 
 /** Every quiz answer the signed-in account has given. */
 export async function fetchAttempts(token: string): Promise<Attempt[]> {
   const { data, error } = await supabase.rpc("my_attempts", { p_token: token });
-  if (error) throw statsError(error);
-  return data ?? [];
+  if (!error) return data ?? [];
+  if (!missingFunction(error)) throw new Error(error.message);
+  const old = await supabase.from("quiz_attempts").select("*");
+  if (old.error) throw new Error(old.error.message);
+  return old.data ?? [];
 }
 
 /** Saves one quiz answer for the signed-in account and returns the saved row. */
@@ -83,16 +87,26 @@ export async function recordAttempt(token: string, wordId: number, correct: bool
     p_word_id: wordId,
     p_correct: correct,
   });
-  if (error) throw statsError(error);
-  return (data as Attempt[])[0];
+  if (!error) return (data as Attempt[])[0];
+  if (!missingFunction(error)) throw new Error(error.message);
+  const old = await supabase
+    .from("quiz_attempts")
+    .insert({ word_id: wordId, correct })
+    .select()
+    .single();
+  if (old.error) throw new Error(old.error.message);
+  return old.data;
 }
 
 export type LeaderboardRow = { username: string; right_count: number; total: number; percent: number };
 
-/** Everyone's quiz totals, best percentage first. */
-export async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
+/** Everyone's quiz totals, best percentage first, or null if the leaderboard isn't set up yet. */
+export async function fetchLeaderboard(): Promise<LeaderboardRow[] | null> {
   const { data, error } = await supabase.rpc("leaderboard");
-  if (error) throw statsError(error);
+  if (error) {
+    if (missingFunction(error)) return null;
+    throw new Error(error.message);
+  }
   return ((data ?? []) as LeaderboardRow[]).map((r) => ({
     username: r.username,
     right_count: Number(r.right_count),

@@ -69,7 +69,7 @@ export default function Stats() {
   const [data, setData] = useState<{
     words: Word[];
     attempts: Attempt[];
-    board: LeaderboardRow[];
+    board: LeaderboardRow[] | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -185,7 +185,7 @@ export default function Stats() {
         )}
       </section>
 
-      <Leaderboard rows={data.board} me={account.username} />
+      {data.board && <Leaderboard rows={data.board} me={account.username} />}
     </div>
   );
 }
