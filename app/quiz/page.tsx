@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchAttempts, fetchPastWords, supabase, type Attempt, type Word } from "@/lib/supabase";
+import Link from "next/link";
+import { fetchAttempts, fetchPastWords, recordAttempt, type Attempt, type Word } from "@/lib/supabase";
 import { Loading, ErrorMessage } from "@/components/Status";
+import { useAccount } from "@/components/Account";
 
 type Question = { target: Word; choices: Word[] };
 
@@ -49,6 +51,7 @@ function pickQuestion(words: Word[], attempts: Attempt[], previousId?: number): 
 }
 
 export default function Quiz() {
+  const { token } = useAccount();
   const [words, setWords] = useState<Word[] | null>(null);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [question, setQuestion] = useState<Question | null>(null);
@@ -58,14 +61,14 @@ export default function Quiz() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchPastWords(), fetchAttempts()])
+    Promise.all([fetchPastWords(), fetchAttempts(token)])
       .then(([w, a]) => {
         setWords(w);
         setAttempts(a);
         if (w.length >= 2) setQuestion(pickQuestion(w, a));
       })
       .catch((e) => setError(e.message ?? String(e)));
-  }, []);
+  }, [token]);
 
   async function answer(choice: Word) {
     if (!question || picked !== null) return;
@@ -73,14 +76,14 @@ export default function Quiz() {
     setPicked(choice.id);
     setScore((s) => ({ right: s.right + (correct ? 1 : 0), total: s.total + 1 }));
     setSaving(true);
-    const { data, error } = await supabase
-      .from("quiz_attempts")
-      .insert({ word_id: question.target.id, correct })
-      .select()
-      .single();
-    setSaving(false);
-    if (error) setError(`Could not save your answer: ${error.message}`);
-    else if (data) setAttempts((a) => [...a, data]);
+    try {
+      const saved = await recordAttempt(token, question.target.id, correct);
+      setAttempts((a) => [...a, saved]);
+    } catch (e) {
+      setError(`Could not save your answer: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setSaving(false);
+    }
   }
 
   function next() {
@@ -106,9 +109,17 @@ export default function Quiz() {
     <section>
       <div className="flex items-center justify-between gap-4">
         <h1 className="font-serif text-3xl font-semibold tracking-tight">Quiz</h1>
-        <p className="rounded-full bg-white px-3 py-1 text-sm text-stone-600 ring-1 ring-stone-200">
-          Score: <span className="font-semibold text-stone-900">{score.right}</span> / {score.total}
-        </p>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/stats"
+            className="text-sm text-stone-600 underline underline-offset-2 hover:text-stone-900"
+          >
+            Your stats
+          </Link>
+          <p className="rounded-full bg-white px-3 py-1 text-sm text-stone-600 ring-1 ring-stone-200">
+            Score: <span className="font-semibold text-stone-900">{score.right}</span> / {score.total}
+          </p>
+        </div>
       </div>
 
       <div className="mt-6 rounded-xl border border-stone-200 bg-white p-5 sm:p-6">

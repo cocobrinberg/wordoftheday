@@ -3,15 +3,17 @@
 import { useEffect, useState } from "react";
 import { fetchAttempts, fetchPastWords, formatDay, type Word } from "@/lib/supabase";
 import { Loading, ErrorMessage } from "@/components/Status";
+import { useAccount } from "@/components/Account";
 
 type Row = Word & { right: number; total: number };
 
 export default function History() {
+  const { token } = useAccount();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchPastWords(), fetchAttempts()])
+    Promise.all([fetchPastWords(), fetchAttempts(token)])
       .then(([words, attempts]) =>
         setRows(
           words.map((w) => {
@@ -21,7 +23,7 @@ export default function History() {
         ),
       )
       .catch((e) => setError(e.message ?? String(e)));
-  }, []);
+  }, [token]);
 
   if (error) return <ErrorMessage message={error} />;
   if (!rows) return <Loading />;
