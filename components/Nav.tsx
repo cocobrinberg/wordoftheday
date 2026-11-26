@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { StreakBadge } from "@/components/Streak";
+import { LevelBadge } from "@/components/Game";
 
 const links = [
   { href: "/", label: "Today" },
   { href: "/quiz", label: "Quiz" },
-  { href: "/isee", label: "ISEE Prep" },
+  { href: "/isee", label: "ISEE Prep", short: "ISEE" },
   { href: "/stats", label: "Stats" },
   { href: "/account", label: "Account" },
 ];
@@ -32,6 +33,7 @@ export default function Nav() {
           </span>
         </Link>
         <div className="flex min-w-0 items-center gap-2">
+        <LevelBadge className="hidden md:flex" />
         <StreakBadge />
         <ul className="flex min-w-0 gap-0.5 overflow-x-auto rounded-full bg-white/70 p-1 text-sm ring-1 ring-black/[0.06] shadow-sm [scrollbar-width:none]">
           {links.map((l) => {
@@ -41,13 +43,20 @@ export default function Nav() {
                 <Link
                   href={l.href}
                   aria-current={active ? "page" : undefined}
-                  className={`block rounded-full px-2 py-1.5 text-[13px] font-medium transition-colors sm:px-3.5 sm:text-sm ${
+                  className={`block rounded-full px-1.5 py-1.5 text-xs font-medium transition-colors sm:px-3.5 sm:text-sm ${
                     active
                       ? "bg-ink text-stone-50 shadow-sm"
                       : "text-stone-600 hover:bg-stone-900/5 hover:text-ink"
                   }`}
                 >
-                  {l.label}
+                  {"short" in l ? (
+                    <>
+                      <span className="sm:hidden">{l.short}</span>
+                      <span className="hidden sm:inline">{l.label}</span>
+                    </>
+                  ) : (
+                    l.label
+                  )}
                 </Link>
               </li>
             );

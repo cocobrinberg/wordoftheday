@@ -13,6 +13,7 @@ import {
 import { Loading, ErrorMessage } from "@/components/Status";
 import { useAccount } from "@/components/Account";
 import { Flame, StreakCard, StreakChip } from "@/components/Streak";
+import { Badges, LevelCard } from "@/components/Game";
 import { fetchStreaks, type StreakRow } from "@/lib/streak";
 
 /** Answers needed before someone shows up on the leaderboard. */
@@ -96,7 +97,10 @@ export default function Stats() {
         </h1>
 
         <div className="mt-8">
-          <StreakCard />
+          <div className="grid gap-4">
+            <LevelCard />
+            <StreakCard />
+          </div>
         </div>
 
         {overall.total === 0 ? (
@@ -193,6 +197,8 @@ export default function Stats() {
         )}
       </section>
 
+      <Badges />
+
       {data.board && (
         <Leaderboard rows={data.board} streaks={data.streaks} me={account.username} />
       )}
@@ -202,7 +208,7 @@ export default function Stats() {
 
 function rankClass(rank: number) {
   return rank === 1
-    ? "bg-amber-300 text-amber-950"
+    ? "bg-yellow-300 text-yellow-950"
     : rank === 2
       ? "bg-stone-300 text-stone-800"
       : rank === 3

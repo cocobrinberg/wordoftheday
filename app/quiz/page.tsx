@@ -13,6 +13,9 @@ import { WORD_BANK } from "@/lib/wordBank";
 import { Loading, ErrorMessage } from "@/components/Status";
 import { useAccount } from "@/components/Account";
 import { noteAnswerToday } from "@/lib/streak";
+import { awardAnswer, COMBO_AT } from "@/lib/xp";
+import { Confetti, LevelBadge } from "@/components/Game";
+import { Flame } from "@/components/Streak";
 
 type Question = { target: Word; choices: Word[] };
 
@@ -103,6 +106,12 @@ function pickQuestion(
   return { target, choices: shuffle([target, ...distractors]) };
 }
 
+/** Questions per round. */
+const ROUND = 10;
+
+type Round = { results: boolean[]; xp: number; bestCombo: number };
+const NEW_ROUND: Round = { results: [], xp: 0, bestCombo: 0 };
+
 export default function Quiz() {
   const { token, account } = useAccount();
   const [words, setWords] = useState<Word[] | null>(null);
@@ -111,7 +120,10 @@ export default function Quiz() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [question, setQuestion] = useState<Question | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
-  const [score, setScore] = useState({ right: 0, total: 0 });
+  const [combo, setCombo] = useState(0);
+  const [round, setRound] = useState<Round>(NEW_ROUND);
+  const [summary, setSummary] = useState(false);
+  const [gain, setGain] = useState<{ points: number; key: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -136,16 +148,30 @@ export default function Quiz() {
   async function answer(choice: Word) {
     if (!question || picked !== null) return;
     const correct = choice.id === question.target.id;
+    const nextCombo = correct ? combo + 1 : 0;
     setPicked(choice.id);
-    setScore((s) => ({ right: s.right + (correct ? 1 : 0), total: s.total + 1 }));
+    setCombo(nextCombo);
+
+    const award = (saved: boolean) => {
+      const points = awardAnswer(correct, nextCombo, saved);
+      setGain({ points, key: Date.now() });
+      setRound((r) => ({
+        results: [...r.results, correct],
+        xp: r.xp + points,
+        bestCombo: Math.max(r.bestCombo, nextCombo),
+      }));
+    };
+
     // Only words of the day are saved; they're what the Stats tab tracks.
-    if (question.target.id < 0) return;
+    if (question.target.id < 0) return award(false);
     setSaving(true);
     try {
       const saved = await recordAttempt(token, question.target.id, correct);
       setAttempts((a) => [...a, saved]);
       noteAnswerToday();
+      award(true);
     } catch (e) {
+      award(false);
       setError(`Could not save your answer: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       setSaving(false);
@@ -154,10 +180,24 @@ export default function Quiz() {
 
   function next() {
     if (!words || !question) return;
+    if (round.results.length >= ROUND && !summary) return setSummary(true);
     setPicked(null);
     setError(null);
+    setGain(null);
     setQuestion(pickQuestion(words, bank, attempts, seen.current, question.target.id));
     saveSeen(account.username, seen.current);
+  }
+
+  function newRound() {
+    setRound(NEW_ROUND);
+    setSummary(false);
+    setPicked(null);
+    setError(null);
+    setGain(null);
+    if (words && question) {
+      setQuestion(pickQuestion(words, bank, attempts, seen.current, question.target.id));
+      saveSeen(account.username, seen.current);
+    }
   }
 
   if (error && !words) return <ErrorMessage message={error} />;
@@ -172,8 +212,12 @@ export default function Quiz() {
       </div>
     );
 
+  if (summary) return <RoundSummary round={round} onAgain={newRound} />;
+
   const answered = picked !== null;
   const gotIt = picked === question.target.id;
+  const lastOfRound = answered && round.results.length >= ROUND;
+  const questionNumber = Math.min(round.results.length + (answered ? 0 : 1), ROUND);
 
   return (
     <section className="animate-rise">
@@ -182,19 +226,61 @@ export default function Quiz() {
           <p className="eyebrow text-accent">Practice</p>
           <h1 className="page-title mt-2">Quiz</h1>
         </div>
-        <div className="flex items-center gap-3">
-          <Link href="/stats" className="link text-sm">
+        <div className="flex items-center gap-2">
+          <Link href="/stats" className="link mr-1 text-sm">
             Your stats
           </Link>
-          <p className="card flex items-baseline gap-1.5 rounded-full px-4 py-1.5 text-sm text-stone-500">
-            Score
-            <span className="font-serif text-lg font-semibold text-ink tabular-nums">{score.right}</span>
-            <span className="tabular-nums">/ {score.total}</span>
-          </p>
+          <LevelBadge className="flex md:hidden" />
         </div>
       </div>
 
-      <div key={question.target.id} className="card animate-rise mt-8 px-6 py-7 sm:px-8 sm:py-9">
+      {/* Round progress: one segment per question. */}
+      <div className="mt-8 flex items-center gap-3">
+        <ol className="flex flex-1 gap-1.5" aria-label={`Question ${questionNumber} of ${ROUND}`}>
+          {Array.from({ length: ROUND }, (_, i) => {
+            const r = round.results[i];
+            const current = i === round.results.length && !answered;
+            return (
+              <li
+                key={i}
+                className={`h-2.5 flex-1 rounded-full transition-colors duration-300 ${
+                  r === true
+                    ? "bg-emerald-500"
+                    : r === false
+                      ? "bg-rose-400"
+                      : current
+                        ? "animate-pulse bg-stone-400"
+                        : "bg-stone-200"
+                }`}
+              />
+            );
+          })}
+        </ol>
+        <span className="shrink-0 text-sm font-bold text-stone-500 tabular-nums">
+          {round.results.length}/{ROUND}
+        </span>
+      </div>
+
+      <div className="mt-3 flex min-h-8 items-center justify-between gap-3">
+        <span
+          key={combo}
+          className={`inline-flex items-center gap-1 rounded-full py-1 pr-3 pl-1.5 text-sm font-bold ${
+            combo >= COMBO_AT
+              ? "animate-pop bg-linear-to-r from-orange-500 to-rose-500 text-white shadow-[0_6px_16px_-8px_rgb(234_88_12/0.8)]"
+              : combo > 0
+                ? "animate-pop bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+                : "invisible"
+          }`}
+        >
+          <Flame className="size-4" />
+          {combo} in a row{combo >= COMBO_AT ? " · +5 bonus" : ""}
+        </span>
+        <span className="text-sm font-semibold text-stone-500 tabular-nums">
+          +{round.xp} XP this round
+        </span>
+      </div>
+
+      <div key={question.target.id} className="card animate-rise mt-3 px-6 py-7 sm:px-8 sm:py-9">
         <p className="eyebrow">Which word means&hellip;</p>
         <p className="mt-3 font-serif text-2xl leading-snug text-ink sm:text-3xl">
           {question.target.definition}
@@ -203,15 +289,20 @@ export default function Quiz() {
 
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {question.choices.map((c, i) => {
+          const isAnswer = c.id === question.target.id;
+          const isPick = c.id === picked;
           let style =
-            "bg-white/85 ring-black/[0.08] hover:-translate-y-0.5 hover:ring-ink hover:shadow-md";
+            "bg-white ring-black/[0.08] shadow-[0_4px_0_0_rgb(0_0_0/0.08)] hover:-translate-y-0.5 hover:ring-ink hover:shadow-[0_6px_0_0_rgb(0_0_0/0.1)] active:translate-y-1 active:shadow-none";
           let badge = "bg-stone-100 text-stone-500 group-hover:bg-ink group-hover:text-stone-50";
           if (answered) {
-            if (c.id === question.target.id) {
-              style = "bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950";
+            if (isAnswer) {
+              style = `bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950 shadow-[0_4px_0_0_var(--color-emerald-500)] ${
+                isPick ? "animate-pop" : ""
+              }`;
               badge = "bg-emerald-500 text-white";
-            } else if (c.id === picked) {
-              style = "bg-rose-50 ring-2 ring-rose-400 text-rose-950";
+            } else if (isPick) {
+              style =
+                "animate-shake bg-rose-50 ring-2 ring-rose-400 text-rose-950 shadow-[0_4px_0_0_var(--color-rose-400)]";
               badge = "bg-rose-400 text-white";
             } else {
               style = "bg-white/60 ring-black/[0.06] text-stone-400";
@@ -219,24 +310,34 @@ export default function Quiz() {
             }
           }
           return (
-            <li key={c.id}>
+            <li key={c.id} className="relative">
               <button
                 type="button"
                 onClick={() => answer(c)}
                 disabled={answered}
-                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 shadow-sm transition disabled:cursor-default ${style}`}
+                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 transition disabled:cursor-default ${style}`}
               >
                 <span
-                  className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-semibold transition-colors ${badge}`}
+                  className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold transition-colors ${badge}`}
                 >
-                  {answered && c.id === question.target.id
-                    ? "✓"
-                    : answered && c.id === picked
-                      ? "✕"
-                      : "ABCD"[i]}
+                  {answered && isAnswer ? "✓" : answered && isPick ? "✕" : "ABCD"[i]}
                 </span>
                 <span className="font-serif text-xl font-medium">{c.word}</span>
               </button>
+              {isPick && gain && (
+                <>
+                  {gotIt && <Confetti key={`c${gain.key}`} />}
+                  <span
+                    key={gain.key}
+                    className={`animate-float-up pointer-events-none absolute top-0 left-1/2 rounded-full px-2.5 py-0.5 text-sm font-extrabold shadow-sm ${
+                      gotIt ? "bg-yellow-400 text-yellow-950" : "bg-stone-200 text-stone-700"
+                    }`}
+                    aria-hidden
+                  >
+                    +{gain.points} XP
+                  </span>
+                </>
+              )}
             </li>
           );
         })}
@@ -252,7 +353,10 @@ export default function Quiz() {
           <p className={`text-lg ${gotIt ? "text-emerald-900" : "text-rose-900"}`}>
             {gotIt ? (
               <>
-                <strong className="font-semibold">Correct!</strong> Nicely done.
+                <strong className="font-semibold">
+                  {combo >= 5 ? "Unstoppable!" : combo >= COMBO_AT ? "On fire!" : "Correct!"}
+                </strong>{" "}
+                {gain ? `+${gain.points} XP` : "Nicely done."}
               </>
             ) : (
               <>
@@ -261,8 +365,13 @@ export default function Quiz() {
               </>
             )}
           </p>
-          <button type="button" onClick={next} disabled={saving} className="btn-primary shrink-0">
-            Next question &rarr;
+          <button
+            type="button"
+            onClick={next}
+            disabled={saving}
+            className={`${gotIt ? "btn-go" : "btn-primary"} shrink-0 px-6 py-3`}
+          >
+            {lastOfRound ? "See results" : "Next question"} &rarr;
           </button>
         </div>
       )}
@@ -271,6 +380,61 @@ export default function Quiz() {
           <ErrorMessage message={error} />
         </div>
       )}
+    </section>
+  );
+}
+
+const STAR_PATH = "m12 2.6 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.6Z";
+
+function RoundSummary({ round, onAgain }: { round: Round; onAgain: () => void }) {
+  const right = round.results.filter(Boolean).length;
+  const stars = right >= 9 ? 3 : right >= 6 ? 2 : right >= 3 ? 1 : 0;
+  const message = ["Keep practicing!", "Nice effort!", "Great work!", "Brilliant round!"][stars];
+  const stats = [
+    ["Right", `${right}/${round.results.length}`],
+    ["XP earned", `+${round.xp}`],
+    ["Best combo", `${round.bestCombo}`],
+  ];
+  return (
+    <section className="animate-rise mx-auto max-w-lg text-center">
+      <div className="card relative px-6 py-10">
+        {stars >= 2 && <Confetti count={28} />}
+        <p className="eyebrow">Round complete</p>
+        <div className="mt-5 flex items-end justify-center gap-2" role="img" aria-label={`${stars} of 3 stars`}>
+          {[1, 2, 3].map((n) => (
+            <svg
+              key={n}
+              viewBox="0 0 24 24"
+              aria-hidden
+              strokeWidth="1"
+              strokeLinejoin="round"
+              style={{ animationDelay: `${n * 150}ms` }}
+              className={`animate-streak-pop ${n === 2 ? "size-20" : "size-14"} ${
+                n <= stars ? "fill-yellow-400 stroke-yellow-600 drop-shadow-md" : "fill-stone-200 stroke-stone-300"
+              }`}
+            >
+              <path d={STAR_PATH} />
+            </svg>
+          ))}
+        </div>
+        <h1 className="mt-4 font-serif text-4xl font-semibold tracking-tight">{message}</h1>
+        <dl className="mt-8 grid grid-cols-3 gap-3">
+          {stats.map(([k, v]) => (
+            <div key={k} className="rounded-xl bg-stone-50 p-3 ring-1 ring-stone-200/70">
+              <dt className="text-[0.65rem] font-semibold uppercase tracking-wider text-stone-500">{k}</dt>
+              <dd className="mt-1 font-serif text-2xl font-semibold tabular-nums">{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <button type="button" onClick={onAgain} className="btn-go px-6 py-3">
+            Play another round &rarr;
+          </button>
+          <Link href="/stats" className="btn-secondary px-6 py-3">
+            See your stats
+          </Link>
+        </div>
+      </div>
     </section>
   );
 }

@@ -9,6 +9,8 @@ import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
 import SuggestButton from "@/components/SuggestButton";
 import ShareButton from "@/components/ShareButton";
 import { useAccount } from "@/components/Account";
+import { DailyGoals } from "@/components/Game";
+import { noteHeard } from "@/lib/xp";
 import type { PersonalWordResponse } from "@/app/api/personal-word/route";
 
 /** Say the word aloud with the browser's built-in voice for its language. */
@@ -110,7 +112,10 @@ export default function Home() {
           <div className="relative mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
             <button
               type="button"
-              onClick={() => pronounce(shown.word, lang.code)}
+              onClick={() => {
+                pronounce(shown.word, lang.code);
+                noteHeard();
+              }}
               title="Hear it pronounced"
               className="group inline-flex items-center gap-2 rounded-full bg-white py-1.5 ps-1.5 pe-4 ring-1 ring-stone-200 transition hover:ring-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
@@ -154,6 +159,8 @@ export default function Home() {
           )}
         </div>
       )}
+
+      {shown && <DailyGoals />}
 
       {shared && (
         <aside className="card mt-8 grid gap-5 p-6 sm:grid-cols-[1fr_auto] sm:items-center">
