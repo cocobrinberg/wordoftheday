@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { StreakBadge } from "@/components/Streak";
 import { LevelBadge } from "@/components/Game";
+import { BattleButton } from "@/components/BattleInvites";
 
 const links = [
   { href: "/", label: "Today" },
   { href: "/quiz", label: "Quiz" },
   { href: "/isee", label: "ISEE Prep", short: "ISEE" },
-  { href: "/battle", label: "Battle" },
   { href: "/stats", label: "Stats" },
   { href: "/account", label: "Account" },
 ];
@@ -36,6 +36,7 @@ export default function Nav() {
         <div className="flex min-w-0 items-center gap-2">
         <LevelBadge className="hidden md:flex" />
         <StreakBadge />
+        <BattleButton compact />
         <ul className="flex min-w-0 gap-0.5 overflow-x-auto rounded-full bg-white/70 p-1 text-sm ring-1 ring-black/[0.06] shadow-sm [scrollbar-width:none]">
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);

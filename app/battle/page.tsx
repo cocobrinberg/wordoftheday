@@ -6,6 +6,7 @@ import { supabase, type Word } from "@/lib/supabase";
 import { useAccount } from "@/components/Account";
 import { Loading } from "@/components/Status";
 import { Confetti } from "@/components/Game";
+import { SwordsIcon } from "@/components/BattleInvites";
 import { awardBonus } from "@/lib/xp";
 import {
   BATTLE_PRIZE,
@@ -58,7 +59,7 @@ function Menu({ me }: { me: string }) {
             onClick={() => enterRoom(me)}
             className="btn-go shrink-0 px-6 py-3 text-base"
           >
-            ⚔ Find an opponent
+            <SwordsIcon className="size-5" /> Find an opponent
           </button>
         </div>
       </div>
