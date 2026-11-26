@@ -91,8 +91,26 @@ export async function fetchAttempts(token: string): Promise<Attempt[]> {
   return old.data ?? [];
 }
 
+// Pages stay mounted in the background between navigations, so the Stats page
+// listens here to pick up answers the moment the quiz saves them.
+const attemptListeners = new Set<(a: Attempt) => void>();
+
+/** Calls `listener` with every quiz answer saved from now on. Returns an unsubscribe. */
+export function onAttemptSaved(listener: (a: Attempt) => void) {
+  attemptListeners.add(listener);
+  return () => {
+    attemptListeners.delete(listener);
+  };
+}
+
 /** Saves one quiz answer for the signed-in account and returns the saved row. */
 export async function recordAttempt(token: string, wordId: number, correct: boolean): Promise<Attempt> {
+  const saved = await saveAttempt(token, wordId, correct);
+  attemptListeners.forEach((l) => l(saved));
+  return saved;
+}
+
+async function saveAttempt(token: string, wordId: number, correct: boolean): Promise<Attempt> {
   const { data, error } = await supabase.rpc("record_attempt", {
     p_token: token,
     p_word_id: wordId,

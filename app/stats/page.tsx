@@ -6,6 +6,7 @@ import {
   fetchAttempts,
   fetchLeaderboard,
   fetchWordsThroughToday,
+  onAttemptSaved,
   type Attempt,
   type LeaderboardRow,
   type Word,
@@ -77,10 +78,32 @@ export default function Stats() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Reloads every time the page is shown (this page stays mounted in the
+  // background between tabs), and again after each quiz answer.
   useEffect(() => {
+    let live = true;
+    const loadBoards = () =>
+      Promise.all([fetchLeaderboard(), fetchStreaks()]).then(([board, streaks]) => {
+        if (live) setData((d) => d && { ...d, board, streaks });
+      });
+
     Promise.all([fetchWordsThroughToday(), fetchAttempts(token), fetchLeaderboard(), fetchStreaks()])
-      .then(([words, attempts, board, streaks]) => setData({ words, attempts, board, streaks }))
-      .catch((e) => setError(e.message ?? String(e)));
+      .then(([words, attempts, board, streaks]) => {
+        if (live) setData({ words, attempts, board, streaks });
+      })
+      .catch((e) => live && setError(e.message ?? String(e)));
+
+    const stop = onAttemptSaved((saved) => {
+      // Your own scores change at once; the shared boards follow from the database.
+      setData((d) =>
+        d && !d.attempts.some((a) => a.id === saved.id) ? { ...d, attempts: [...d.attempts, saved] } : d,
+      );
+      loadBoards().catch(() => {});
+    });
+    return () => {
+      live = false;
+      stop();
+    };
   }, [token]);
 
   if (error) return <ErrorMessage message={error} />;
