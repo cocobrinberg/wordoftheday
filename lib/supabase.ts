@@ -61,6 +61,17 @@ export async function fetchPastWords(): Promise<Word[]> {
   return data ?? [];
 }
 
+/** Every word of the day so far, today's included (New York time). */
+export async function fetchWordsThroughToday(): Promise<Word[]> {
+  const { data, error } = await supabase
+    .from("words")
+    .select("*")
+    .lte("day", todayInNewYork())
+    .order("day", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 /**
  * True when a database function from supabase/stats.sql isn't there yet.
  * Until that script is run, quiz answers fall back to the older shared table

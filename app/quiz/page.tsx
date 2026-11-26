@@ -1,8 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { fetchAttempts, fetchPastWords, recordAttempt, type Attempt, type Word } from "@/lib/supabase";
+import {
+  fetchAttempts,
+  fetchWordsThroughToday,
+  recordAttempt,
+  type Attempt,
+  type Word,
+} from "@/lib/supabase";
+import { WORD_BANK } from "@/lib/wordBank";
 import { Loading, ErrorMessage } from "@/components/Status";
 import { useAccount } from "@/components/Account";
 
@@ -33,26 +40,73 @@ function weightFor(word: Word, attempts: Attempt[]): number {
   return (1 + 3 * misses) / (1 + rights);
 }
 
-function pickQuestion(words: Word[], attempts: Attempt[], previousId?: number): Question {
+/** Roughly how often a question reviews a word of the day instead of a new bank word. */
+const DAY_WORD_SHARE = 0.3;
+
+const seenKey = (username: string) => `wotd-quiz-seen:${username}`;
+
+/** Bank words this account has already been asked, so they aren't asked again. */
+function loadSeen(username: string): Set<number> {
+  try {
+    const raw = localStorage.getItem(seenKey(username));
+    return new Set(raw ? (JSON.parse(raw) as number[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveSeen(username: string, seen: Set<number>) {
+  try {
+    localStorage.setItem(seenKey(username), JSON.stringify([...seen]));
+  } catch {}
+}
+
+/** Picks a word of the day, favoring ones missed more often. */
+function pickDayWord(dayWords: Word[], attempts: Attempt[], previousId?: number): Word {
   // Avoid asking the same word twice in a row when there is a choice.
-  const pool = words.length > 1 ? words.filter((w) => w.id !== previousId) : words;
+  const pool = dayWords.length > 1 ? dayWords.filter((w) => w.id !== previousId) : dayWords;
   const weights = pool.map((w) => weightFor(w, attempts));
   let r = Math.random() * weights.reduce((s, w) => s + w, 0);
-  let target = pool[pool.length - 1];
   for (let i = 0; i < pool.length; i++) {
     r -= weights[i];
-    if (r <= 0) {
-      target = pool[i];
-      break;
-    }
+    if (r <= 0) return pool[i];
   }
-  const distractors = shuffle(words.filter((w) => w.id !== target.id)).slice(0, 3);
+  return pool[pool.length - 1];
+}
+
+/**
+ * Most questions use a bank word that hasn't been asked before; the rest
+ * review words of the day, which are the only ones that come back. Once
+ * every bank word has been asked, the bank starts over.
+ */
+function pickQuestion(
+  dayWords: Word[],
+  bank: Word[],
+  attempts: Attempt[],
+  seen: Set<number>,
+  previousId?: number,
+): Question {
+  let fresh = bank.filter((w) => !seen.has(w.id));
+  if (!fresh.length) {
+    seen.clear();
+    fresh = bank.filter((w) => w.id !== previousId);
+  }
+  const useDayWord = dayWords.length > 0 && (!fresh.length || Math.random() < DAY_WORD_SHARE);
+  const target = useDayWord
+    ? pickDayWord(dayWords, attempts, previousId)
+    : fresh[Math.floor(Math.random() * fresh.length)];
+  if (target.id < 0) seen.add(target.id);
+
+  const all = [...dayWords, ...bank];
+  const distractors = shuffle(all.filter((w) => w.id !== target.id)).slice(0, 3);
   return { target, choices: shuffle([target, ...distractors]) };
 }
 
 export default function Quiz() {
-  const { token } = useAccount();
+  const { token, account } = useAccount();
   const [words, setWords] = useState<Word[] | null>(null);
+  const [bank, setBank] = useState<Word[]>([]);
+  const seen = useRef<Set<number>>(new Set());
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [question, setQuestion] = useState<Question | null>(null);
   const [picked, setPicked] = useState<number | null>(null);
@@ -61,20 +115,30 @@ export default function Quiz() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchPastWords(), fetchAttempts(token)])
+    Promise.all([fetchWordsThroughToday(), fetchAttempts(token)])
       .then(([w, a]) => {
+        // A bank word that is also a word of the day is asked as the word of the day.
+        const dayNames = new Set(w.map((d) => d.word.toLowerCase()));
+        const b = WORD_BANK.filter((x) => !dayNames.has(x.word.toLowerCase()));
+        seen.current = loadSeen(account.username);
         setWords(w);
+        setBank(b);
         setAttempts(a);
-        if (w.length >= 2) setQuestion(pickQuestion(w, a));
+        if (w.length + b.length >= 4) {
+          setQuestion(pickQuestion(w, b, a, seen.current));
+          saveSeen(account.username, seen.current);
+        }
       })
       .catch((e) => setError(e.message ?? String(e)));
-  }, [token]);
+  }, [token, account.username]);
 
   async function answer(choice: Word) {
     if (!question || picked !== null) return;
     const correct = choice.id === question.target.id;
     setPicked(choice.id);
     setScore((s) => ({ right: s.right + (correct ? 1 : 0), total: s.total + 1 }));
+    // Only words of the day are saved; they're what the Stats tab tracks.
+    if (question.target.id < 0) return;
     setSaving(true);
     try {
       const saved = await recordAttempt(token, question.target.id, correct);
@@ -90,7 +154,8 @@ export default function Quiz() {
     if (!words || !question) return;
     setPicked(null);
     setError(null);
-    setQuestion(pickQuestion(words, attempts, question.target.id));
+    setQuestion(pickQuestion(words, bank, attempts, seen.current, question.target.id));
+    saveSeen(account.username, seen.current);
   }
 
   if (error && !words) return <ErrorMessage message={error} />;
