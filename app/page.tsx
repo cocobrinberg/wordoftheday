@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { supabase, todayInNewYork, formatDay, type Word } from "@/lib/supabase";
 import { ENGLISH } from "@/lib/languages";
 import { Loading, ErrorMessage } from "@/components/Status";
 import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
 import SuggestButton from "@/components/SuggestButton";
+import ShareButton from "@/components/ShareButton";
 import { useAccount } from "@/components/Account";
 import type { PersonalWordResponse } from "@/app/api/personal-word/route";
 
@@ -28,6 +29,7 @@ export default function Home() {
   const [shared, setShared] = useState<Word | null | undefined>(undefined);
   const [lang, setLang] = useLanguage();
   const [results, setResults] = useState<Record<string, Result>>({});
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const hobbies = account.hobbies ?? [];
   const hobbyKey = [...hobbies].sort().join("|");
@@ -69,6 +71,7 @@ export default function Home() {
           <p className="mt-2 font-serif text-2xl italic text-stone-600">Your word for today</p>
         </div>
         <div className="flex items-center gap-3">
+          <ShareButton word={shown} cardRef={cardRef} />
           <SuggestButton />
           <LanguagePicker value={lang} onChange={setLang} />
         </div>
@@ -85,6 +88,7 @@ export default function Home() {
       ) : (
         <div
           key={key}
+          ref={cardRef}
           lang={lang.code}
           dir={lang.rtl ? "rtl" : "ltr"}
           className="card animate-rise relative mt-6 overflow-hidden px-6 py-8 sm:px-10 sm:py-12"
