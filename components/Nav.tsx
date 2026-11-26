@@ -79,7 +79,7 @@ export default function Nav() {
 
   return (
     <>
-      <header className="sticky top-0 z-20 border-b-2 border-stone-200/70 bg-[color-mix(in_srgb,var(--page-bg)_85%,transparent)] backdrop-blur-md">
+      <header className="sticky top-0 z-20 border-b-2 pt-[env(safe-area-inset-top)] border-stone-200/70 bg-[color-mix(in_srgb,var(--page-bg)_85%,transparent)] backdrop-blur-md">
         <nav className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-2.5">
           <Link
             href="/"

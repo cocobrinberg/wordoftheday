@@ -14,7 +14,9 @@ export const metadata: Metadata = {
   description: "A new word every day, plus a quiz to make it stick.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1 };
+// viewportFit "cover" lets the background run under the notch and home bar;
+// the header, tab bar and body padding keep content inside the safe area.
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -23,7 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Splash />
         <Nav />
         {/* Extra bottom room on phones for the tab bar. */}
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-28 sm:pt-10 md:pb-12">
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:pt-10 md:pb-12">
           <AccountGate>{children}</AccountGate>
         </main>
         <footer className="mx-auto hidden w-full max-w-3xl px-4 pt-4 pb-8 text-center text-xs font-semibold text-stone-400 md:block">
