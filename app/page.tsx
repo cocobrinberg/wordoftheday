@@ -157,7 +157,7 @@ export default function Home() {
             </p>
             <p className="mt-1 text-stone-700">{shared.definition}</p>
             <p className="mt-3 text-sm text-stone-500">
-              The quiz and <Link href="/history" className="link">history</Link> use these shared
+              The quiz uses these shared
               words.
             </p>
           </div>
