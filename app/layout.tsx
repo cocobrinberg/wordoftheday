@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Fredoka, Nunito } from "next/font/google";
 import Nav from "@/components/Nav";
 import AccountGate from "@/components/Account";
+import Splash from "@/components/Splash";
 import "./globals.css";
 
 // Friendly rounded type: Nunito for reading, Fredoka for headings and big numbers.
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${sans.variable} ${display.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-(--page-bg) font-sans text-ink transition-colors">
+        <Splash />
         <Nav />
         {/* Extra bottom room on phones for the tab bar. */}
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 pt-6 pb-28 sm:pt-10 md:pb-12">

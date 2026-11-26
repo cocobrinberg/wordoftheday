@@ -249,3 +249,106 @@ h3 {
     animation: none;
   }
 }
+
+/* Loading splash: the logo drops in, the name bounces in letter by letter. */
+@keyframes splash-drop {
+  0% {
+    transform: translateY(-40px) scale(0.5) rotate(-12deg);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(6px) scale(1.08) rotate(4deg);
+    opacity: 1;
+  }
+  80% {
+    transform: translateY(-3px) scale(0.97) rotate(-2deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes splash-wobble {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  50% {
+    transform: rotate(3deg) translateY(-4px);
+  }
+}
+
+@keyframes splash-letter {
+  0% {
+    transform: translateY(18px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-8px) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes splash-twinkle {
+  0%,
+  100% {
+    transform: scale(0.4) rotate(0deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+@keyframes splash-fill {
+  from {
+    width: 8%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.splash-logo {
+  animation: splash-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.splash-tile {
+  animation: splash-wobble 1.6s ease-in-out 0.6s infinite;
+}
+
+.splash-star {
+  animation: streak-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.45s both;
+}
+
+.splash-letter {
+  display: inline-block;
+  animation: splash-letter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.splash-sparkle {
+  animation: splash-twinkle 1.2s ease-in-out infinite both;
+}
+
+.splash-bar {
+  width: 100%;
+  animation-name: splash-fill;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splash-logo,
+  .splash-tile,
+  .splash-star,
+  .splash-letter,
+  .splash-sparkle,
+  .splash-bar {
+    animation: none;
+  }
+}
