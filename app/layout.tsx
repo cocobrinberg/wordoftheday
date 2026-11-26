@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import Nav from "@/components/Nav";
-import SuggestButton from "@/components/SuggestButton";
 import AccountGate from "@/components/Account";
 import "./globals.css";
 
@@ -21,11 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col bg-(--page-bg) font-sans text-ink transition-colors">
         <Nav />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-14">
-          {/* Inside the gate so the button only shows once someone is signed in and set up. */}
-          <AccountGate>
-            <SuggestButton />
-            {children}
-          </AccountGate>
+          <AccountGate>{children}</AccountGate>
         </main>
         <footer className="mx-auto w-full max-w-3xl px-4 pb-8 pt-4 text-center text-xs text-stone-500">
           A new word every morning, New York time.

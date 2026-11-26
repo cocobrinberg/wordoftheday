@@ -6,6 +6,7 @@ import { supabase, todayInNewYork, formatDay, type Word } from "@/lib/supabase";
 import { ENGLISH } from "@/lib/languages";
 import { Loading, ErrorMessage } from "@/components/Status";
 import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
+import SuggestButton from "@/components/SuggestButton";
 import { useAccount } from "@/components/Account";
 import type { PersonalWordResponse } from "@/app/api/personal-word/route";
 
@@ -67,7 +68,10 @@ export default function Home() {
           <p className="eyebrow text-accent">{formatDay(today)}</p>
           <p className="mt-2 font-serif text-2xl italic text-stone-600">Your word for today</p>
         </div>
-        <LanguagePicker value={lang} onChange={setLang} />
+        <div className="flex items-center gap-3">
+          <SuggestButton />
+          <LanguagePicker value={lang} onChange={setLang} />
+        </div>
       </header>
 
       {current?.status === "error" ? (
