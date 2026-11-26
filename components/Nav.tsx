@@ -9,6 +9,7 @@ const links = [
   { href: "/", label: "Today" },
   { href: "/quiz", label: "Quiz" },
   { href: "/isee", label: "ISEE Prep", short: "ISEE" },
+  { href: "/battle", label: "Battle" },
   { href: "/stats", label: "Stats" },
   { href: "/account", label: "Account" },
 ];

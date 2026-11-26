@@ -138,6 +138,13 @@ export function awardAnswer(correct: boolean, combo: number, saved: boolean): nu
   return points + bonus;
 }
 
+/** Adds a flat XP prize (like winning a battle) to the signed-in player's local bonus. */
+export function awardBonus(points: number) {
+  if (!user || points <= 0) return;
+  write(bonusKey(user), read<number>(bonusKey(user), 0) + points);
+  publish();
+}
+
 /** Marks today's "hear the word" goal as done. */
 export function noteHeard() {
   if (!user) return;

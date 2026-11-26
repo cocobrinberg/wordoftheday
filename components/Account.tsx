@@ -7,6 +7,7 @@ import { applyTheme } from "@/lib/theme";
 import { Loading } from "@/components/Status";
 import { StreakSync } from "@/components/Streak";
 import { XpSync } from "@/components/Game";
+import BattleInvites from "@/components/BattleInvites";
 
 const TOKEN_KEY = "wotd-session";
 const BG_KEY = "wotd-background";
@@ -154,6 +155,7 @@ export default function AccountGate({ children }: { children: ReactNode }) {
     <Ctx.Provider value={value}>
       <StreakSync token={token!} />
       <XpSync token={token!} username={account.username} />
+      <BattleInvites username={account.username} />
       {needsHobbies ? (
         <section className="animate-rise mx-auto max-w-md">
           <StepLabel step={1} />

@@ -227,6 +227,9 @@ export default function Quiz() {
           <h1 className="page-title mt-2">Quiz</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/battle" className="btn-go mr-1 px-4 py-2">
+            ⚔ 1v1 Battle
+          </Link>
           <Link href="/stats" className="link mr-1 text-sm">
             Your stats
           </Link>
