@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { todayInNewYork } from "@/lib/supabase";
 import { clearStreak, loadStreak, shiftDay, useStreak, type Streak } from "@/lib/streak";
 
@@ -22,7 +22,9 @@ function flameState(s: Pick<Streak, "current" | "playedToday">): FlameState {
 }
 
 export function Flame({ state = "lit", className = "" }: { state?: FlameState; className?: string }) {
-  const id = `flame-${state}`;
+  // Unique per icon: many flames share a page, and a gradient that lives in a
+  // hidden copy (like the header badge on phones) would leave the others blank.
+  const id = `flame-${useId().replace(/:/g, "")}`;
   const [outer, inner] =
     state === "lit"
       ? [["#fbbf24", "#f97316", "#dc2626"], ["#fef9c3", "#fde047"]]

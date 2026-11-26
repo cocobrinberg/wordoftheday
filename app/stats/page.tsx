@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import {
   fetchAttempts,
   fetchLeaderboard,
-  fetchPastWords,
+  fetchWordsThroughToday,
   type Attempt,
   type LeaderboardRow,
   type Word,
@@ -78,7 +78,7 @@ export default function Stats() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchPastWords(), fetchAttempts(token), fetchLeaderboard(), fetchStreaks()])
+    Promise.all([fetchWordsThroughToday(), fetchAttempts(token), fetchLeaderboard(), fetchStreaks()])
       .then(([words, attempts, board, streaks]) => setData({ words, attempts, board, streaks }))
       .catch((e) => setError(e.message ?? String(e)));
   }, [token]);
