@@ -7,6 +7,8 @@ export type PersonalWord = {
   example: string;
   /** The hobby this word was picked for. */
   hobby: string;
+  /** How to say it, in IPA (e.g. "/ˈɡæmbɪt/"), or "" when unknown. */
+  phonetic: string;
 };
 
 const POS: Record<string, string> = { n: "noun", v: "verb", adj: "adjective", adv: "adverb" };
@@ -53,7 +55,8 @@ export async function personalWord(hobbies: string[], day: string): Promise<Pers
   const url = new URL("https://api.datamuse.com/words");
   url.searchParams.set("ml", hobby);
   url.searchParams.set("topics", hobby);
-  url.searchParams.set("md", "dpf");
+  url.searchParams.set("md", "dpfr");
+  url.searchParams.set("ipa", "1");
   url.searchParams.set("max", "100");
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Word service returned ${res.status}`);
@@ -89,12 +92,14 @@ export async function personalWord(hobbies: string[], day: string): Promise<Pers
     return { pos: POS[code] ?? code, text: text.trim() };
   });
   const best = defs.reduce((a, b) => (relevance(b.text) > relevance(a.text) ? b : a));
+  const ipa = pick.tags?.find((t) => t.startsWith("ipa_pron:"))?.slice(9).trim();
   const result: PersonalWord = {
     word: pick.word,
     part_of_speech: best.pos,
     definition: best.text,
     example: "",
     hobby,
+    phonetic: ipa ? `/${ipa}/` : "",
   };
 
   // Add an example sentence when the dictionary has one for this same meaning.
@@ -104,9 +109,16 @@ export async function personalWord(hobbies: string[], day: string): Promise<Pers
     );
     if (dict.ok) {
       type Entry = {
+        phonetic?: string;
+        phonetics?: { text?: string }[];
         meanings: { partOfSpeech: string; definitions: { definition: string; example?: string }[] }[];
       };
       const entries = (await dict.json()) as Entry[];
+      // The dictionary's pronunciation reads more familiarly than Datamuse's.
+      const text =
+        entries.find((e) => e.phonetic)?.phonetic ??
+        entries.flatMap((e) => e.phonetics ?? []).find((p) => p.text)?.text;
+      if (text) result.phonetic = text;
       const meanings = entries.flatMap((e) => e.meanings);
       const ours = new Set(contentWords(best.text));
       const match = meanings

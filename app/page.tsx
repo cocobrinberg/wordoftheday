@@ -9,7 +9,17 @@ import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
 import { useAccount } from "@/components/Account";
 import type { PersonalWordResponse } from "@/app/api/personal-word/route";
 
-type Result = { status: "done"; data: PersonalWordResponse } | { status: "error"; message: string };
+/** Say the word aloud with the browser's built-in voice for its language. */
+function pronounce(word: string, lang: string) {
+  if (!("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = lang;
+  utterance.rate = 0.85;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+}
+
+type Result ={ status: "done"; data: PersonalWordResponse } | { status: "error"; message: string };
 
 export default function Home() {
   const { account } = useAccount();
@@ -73,14 +83,29 @@ export default function Home() {
           <p lang="en" dir="ltr" className="text-sm text-stone-500">
             Picked for your love of <span className="font-medium text-stone-800">{shown.hobby}</span>
           </p>
-          <h1 className="mt-2 break-words font-serif text-5xl font-semibold tracking-tight sm:text-6xl">
-            {shown.word}
+          <p className="mt-4 flex flex-wrap items-baseline gap-x-3">
+            {shown.phonetic && (
+              <span
+                lang={lang.code.startsWith("zh") ? "zh-Latn-pinyin" : undefined}
+                className="text-2xl tracking-wide text-amber-700"
+              >
+                {shown.phonetic}
+              </span>
+            )}
+            <span lang="en" dir="ltr" className="text-sm text-stone-500">
+              click for pronunciation
+            </span>
+          </p>
+          <h1 className="mt-1 break-words font-serif text-5xl font-semibold tracking-tight sm:text-6xl">
+            <button
+              type="button"
+              onClick={() => pronounce(shown.word, lang.code)}
+              title="Hear it pronounced"
+              className="cursor-pointer rounded-md text-start underline decoration-amber-300 decoration-dotted underline-offset-8 hover:text-amber-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500"
+            >
+              {shown.word}
+            </button>
           </h1>
-          {shown.pinyin && (
-            <p lang="zh-Latn-pinyin" className="mt-2 text-2xl tracking-wide text-amber-700">
-              {shown.pinyin}
-            </p>
-          )}
           <p className="mt-2 font-serif text-lg italic text-stone-500">
             {shown.part_of_speech}
             {!isEnglish && (

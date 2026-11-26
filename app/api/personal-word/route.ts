@@ -3,7 +3,7 @@ import { ENGLISH, findLanguage } from "@/lib/languages";
 import { personalWord, type PersonalWord } from "@/lib/personalWord";
 import { translateText } from "@/lib/translate";
 
-export type PersonalWordResponse = PersonalWord & { english: string; pinyin?: string };
+export type PersonalWordResponse = PersonalWord & { english: string };
 
 /** GET /api/personal-word?hobby=a&hobby=b…&day=YYYY-MM-DD[&lang=es] */
 export async function GET(request: Request) {
@@ -28,8 +28,10 @@ export async function GET(request: Request) {
       const [w, pos, example] = await Promise.all(
         [word.word, word.part_of_speech, word.example].map((t) => translateText(t, lang.code)),
       );
-      Object.assign(result, { word: w, part_of_speech: pos, example });
-      if (lang.code.startsWith("zh")) result.pinyin = pinyin(w);
+      // The English pronunciation doesn't fit the translation; Mandarin
+      // shows pinyin instead.
+      Object.assign(result, { word: w, part_of_speech: pos, example, phonetic: "" });
+      if (lang.code.startsWith("zh")) result.phonetic = pinyin(w);
     }
     return Response.json(result);
   } catch (e) {
