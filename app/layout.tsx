@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Source_Serif_4 } from "next/font/google";
 import Nav from "@/components/Nav";
+import SuggestButton from "@/components/SuggestButton";
 import AccountGate from "@/components/Account";
 import "./globals.css";
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-(--page-bg) font-sans text-ink transition-colors">
         <Nav />
+        <SuggestButton />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-14">
           <AccountGate>{children}</AccountGate>
         </main>
