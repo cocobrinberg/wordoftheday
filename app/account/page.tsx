@@ -9,7 +9,7 @@ export default function AccountPage() {
       <div className="flex items-center gap-4">
         <span
           aria-hidden
-          className="grid size-14 shrink-0 place-items-center rounded-2xl bg-ink font-serif text-2xl font-semibold text-amber-200 uppercase shadow-sm"
+          className="grid size-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br from-orange-400 to-orange-600 font-serif text-3xl font-bold text-white uppercase shadow-[0_4px_0_0_var(--color-orange-700)]"
         >
           {account.username[0]}
         </span>

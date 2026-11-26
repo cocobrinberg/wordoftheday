@@ -47,7 +47,7 @@ export function BattleButton({ compact = false, className = "" }: { compact?: bo
       title={label}
       aria-label={label}
       aria-current={active ? "page" : undefined}
-      className={`group relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-linear-to-b from-orange-400 to-rose-500 py-1.5 font-bold text-white ring-1 ring-rose-600/40 shadow-[0_3px_0_0_var(--color-rose-700),0_8px_18px_-8px_rgb(from_var(--color-rose-600)_r_g_b/0.8)] transition-all duration-150 hover:-translate-y-px hover:from-orange-300 hover:to-rose-400 hover:shadow-[0_4px_0_0_var(--color-rose-700),0_10px_20px_-8px_rgb(from_var(--color-rose-600)_r_g_b/0.9)] active:translate-y-[2px] active:shadow-[0_1px_0_0_var(--color-rose-700)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 ${
+      className={`group relative inline-flex shrink-0 items-center gap-1.5 rounded-full bg-linear-to-b from-rose-400 to-rose-600 py-1.5 font-bold text-white ring-1 ring-rose-600/40 shadow-[0_3px_0_0_var(--color-rose-700),0_8px_18px_-8px_rgb(from_var(--color-rose-600)_r_g_b/0.8)] transition-all duration-150 hover:-translate-y-px hover:from-rose-300 hover:to-rose-500 hover:shadow-[0_4px_0_0_var(--color-rose-700),0_10px_20px_-8px_rgb(from_var(--color-rose-600)_r_g_b/0.9)] active:translate-y-[2px] active:shadow-[0_1px_0_0_var(--color-rose-700)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 ${
         compact ? "px-2 text-sm sm:px-3" : "px-4 text-sm"
       } ${active ? "ring-2 ring-white/80" : ""} ${className}`}
     >

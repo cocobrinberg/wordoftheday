@@ -141,64 +141,78 @@ export function DailyGoals() {
   const streak = useStreak();
   if (!xp) return null;
   const goals = [
-    { label: "Hear today's word", hint: "Tap the speaker", done: xp.daily.heard },
+    { icon: "🔊", label: "Hear today's word", hint: "Tap the speaker", done: xp.daily.heard, progress: xp.daily.heard ? 1 : 0 },
     {
-      label: "Answer a quiz question",
+      icon: "⚡",
+      label: "Answer a question",
       hint: "Keeps your streak alive",
       done: xp.daily.answered > 0 || !!streak?.playedToday,
+      progress: xp.daily.answered > 0 || streak?.playedToday ? 1 : 0,
     },
     {
+      icon: "🎯",
       label: "Get 5 right",
       hint: `${Math.min(xp.daily.right, 5)} of 5`,
       done: xp.daily.right >= 5,
+      progress: Math.min(xp.daily.right, 5) / 5,
     },
   ];
   const doneCount = goals.filter((g) => g.done).length;
   const allDone = doneCount === goals.length;
 
   return (
-    <section className={`card mt-8 p-6 ${allDone ? "ring-2 ring-emerald-400" : ""}`} aria-labelledby="goals">
+    <section className="card mt-8 p-6" aria-labelledby="goals">
       <div className="flex items-center justify-between gap-3">
-        <h2 id="goals" className="eyebrow">
+        <h2 id="goals" className="font-serif text-2xl font-semibold">
           Today&rsquo;s goals
         </h2>
         <span
-          className={`rounded-full px-2.5 py-0.5 text-xs font-bold tabular-nums ${
-            allDone ? "bg-emerald-500 text-white" : "bg-stone-100 text-stone-600"
+          className={`chip tabular-nums ${
+            allDone ? "animate-pop bg-emerald-500 text-white" : "bg-orange-100 text-orange-700"
           }`}
         >
-          {allDone ? "All done! 🎉" : `${doneCount} / ${goals.length}`}
+          {allDone ? "All done! 🎉" : `${doneCount} / ${goals.length} done`}
         </span>
       </div>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+      <ul className="mt-5 grid gap-3 sm:grid-cols-3">
         {goals.map((g) => (
           <li
             key={g.label}
-            className={`flex items-center gap-3 rounded-xl p-3 ring-1 transition ${
-              g.done ? "bg-emerald-50 ring-emerald-200" : "bg-stone-50 ring-stone-200/70"
+            className={`rounded-2xl p-4 ring-2 transition ${
+              g.done
+                ? "bg-emerald-50 ring-emerald-300 shadow-[0_4px_0_0_var(--color-emerald-300)]"
+                : "bg-stone-50 ring-stone-200 shadow-[0_4px_0_0_var(--color-stone-200)]"
             }`}
           >
-            <span
-              className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold ${
-                g.done ? "animate-pop bg-emerald-500 text-white" : "bg-white text-stone-300 ring-2 ring-stone-200"
-              }`}
-              aria-hidden
-            >
-              {g.done ? "✓" : ""}
-            </span>
-            <span className="min-w-0">
-              <span className={`block text-sm font-semibold ${g.done ? "text-emerald-900" : "text-ink"}`}>
-                {g.label}
-                <span className="sr-only">{g.done ? " (done)" : " (not done)"}</span>
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className={`grid size-11 shrink-0 place-items-center rounded-xl text-xl ${
+                  g.done ? "animate-pop bg-emerald-500 text-white" : "bg-white ring-2 ring-stone-200"
+                }`}
+              >
+                {g.done ? "✓" : g.icon}
               </span>
-              <span className="block text-xs text-stone-500">{g.hint}</span>
-            </span>
+              <span className="min-w-0">
+                <span className={`block font-extrabold leading-tight ${g.done ? "text-emerald-800" : "text-ink"}`}>
+                  {g.label}
+                  <span className="sr-only">{g.done ? " (done)" : " (not done)"}</span>
+                </span>
+                <span className="block text-xs font-bold text-stone-500">{g.hint}</span>
+              </span>
+            </div>
+            <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-stone-200/80" aria-hidden>
+              <div
+                className={`h-full rounded-full transition-[width] duration-700 ${g.done ? "bg-emerald-500" : "bg-orange-400"}`}
+                style={{ width: `${Math.max(g.progress * 100, g.progress ? 8 : 0)}%` }}
+              />
+            </div>
           </li>
         ))}
       </ul>
       {!allDone && (
-        <Link href="/quiz" className="btn-primary mt-5 w-full py-3 sm:w-auto">
-          Play the quiz &rarr;
+        <Link href="/quiz" className="btn-primary mt-6 w-full py-3.5 text-base sm:w-auto sm:px-8">
+          ▶ Play the quiz
         </Link>
       )}
     </section>

@@ -158,14 +158,14 @@ export default function IseePrep() {
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
         {question.choices.map((c, i) => {
           let style =
-            "bg-white/85 ring-black/[0.08] hover:-translate-y-0.5 hover:ring-ink hover:shadow-md";
-          let badge = "bg-stone-100 text-stone-500 group-hover:bg-ink group-hover:text-stone-50";
+            "bg-white ring-stone-200 shadow-[0_5px_0_0_var(--color-stone-200)] hover:-translate-y-0.5 hover:bg-orange-50 hover:ring-orange-300 hover:shadow-[0_6px_0_0_var(--color-orange-300)] active:translate-y-1 active:shadow-none";
+          let badge = "bg-stone-100 text-stone-500 group-hover:bg-orange-500 group-hover:text-white";
           if (answered) {
             if (c.id === question.target.id) {
-              style = "bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950";
+              style = "animate-pop bg-emerald-50 ring-emerald-500 text-emerald-950 shadow-[0_5px_0_0_var(--color-emerald-500)]";
               badge = "bg-emerald-500 text-white";
             } else if (c.id === picked) {
-              style = "bg-rose-50 ring-2 ring-rose-400 text-rose-950";
+              style = "animate-shake bg-rose-50 ring-rose-400 text-rose-950 shadow-[0_5px_0_0_var(--color-rose-400)]";
               badge = "bg-rose-400 text-white";
             } else {
               style = "bg-white/60 ring-black/[0.06] text-stone-400";
@@ -178,7 +178,7 @@ export default function IseePrep() {
                 type="button"
                 onClick={() => answer(c)}
                 disabled={answered}
-                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 shadow-sm transition disabled:cursor-default ${style}`}
+                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-2 shadow-sm transition disabled:cursor-default ${style}`}
               >
                 <span
                   className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-semibold transition-colors ${badge}`}

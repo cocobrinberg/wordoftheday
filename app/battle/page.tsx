@@ -447,7 +447,7 @@ function Room({ host, me }: { host: string; me: string }) {
                 const isAnswer = c.id === question.target.id;
                 const isPick = c.id === picked;
                 let style =
-                  "bg-white ring-black/[0.08] shadow-[0_4px_0_0_rgb(0_0_0/0.08)] hover:-translate-y-0.5 hover:ring-ink active:translate-y-1 active:shadow-none";
+                  "bg-white ring-stone-200 shadow-[0_5px_0_0_var(--color-stone-200)] hover:-translate-y-0.5 hover:bg-orange-50 hover:ring-orange-300 active:translate-y-1 active:shadow-none";
                 if (picked !== null) {
                   if (isAnswer) style = "bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950";
                   else if (isPick) style = "animate-shake bg-rose-50 ring-2 ring-rose-400 text-rose-950";
@@ -459,7 +459,7 @@ function Room({ host, me }: { host: string; me: string }) {
                       type="button"
                       onClick={(e) => answer(c, performance.timeOrigin + e.timeStamp)}
                       disabled={picked !== null}
-                      className={`flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 transition disabled:cursor-default ${style}`}
+                      className={`flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-2 transition disabled:cursor-default ${style}`}
                     >
                       <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-stone-100 text-sm font-bold text-stone-500">
                         {"ABCD"[i]}

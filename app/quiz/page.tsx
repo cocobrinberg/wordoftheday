@@ -294,8 +294,8 @@ export default function Quiz() {
           const isAnswer = c.id === question.target.id;
           const isPick = c.id === picked;
           let style =
-            "bg-white ring-black/[0.08] shadow-[0_4px_0_0_rgb(0_0_0/0.08)] hover:-translate-y-0.5 hover:ring-ink hover:shadow-[0_6px_0_0_rgb(0_0_0/0.1)] active:translate-y-1 active:shadow-none";
-          let badge = "bg-stone-100 text-stone-500 group-hover:bg-ink group-hover:text-stone-50";
+            "bg-white ring-stone-200 shadow-[0_5px_0_0_var(--color-stone-200)] hover:-translate-y-0.5 hover:bg-orange-50 hover:ring-orange-300 hover:shadow-[0_6px_0_0_var(--color-orange-300)] active:translate-y-1 active:shadow-none";
+          let badge = "bg-stone-100 text-stone-500 group-hover:bg-orange-500 group-hover:text-white";
           if (answered) {
             if (isAnswer) {
               style = `bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950 shadow-[0_4px_0_0_var(--color-emerald-500)] ${
@@ -317,7 +317,7 @@ export default function Quiz() {
                 type="button"
                 onClick={() => answer(c)}
                 disabled={answered}
-                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 transition disabled:cursor-default ${style}`}
+                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-2 transition disabled:cursor-default ${style}`}
               >
                 <span
                   className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-bold transition-colors ${badge}`}

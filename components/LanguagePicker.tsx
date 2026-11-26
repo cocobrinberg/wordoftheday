@@ -51,7 +51,7 @@ export default function LanguagePicker({
   return (
     <fieldset>
       <legend className="sr-only">Language</legend>
-      <div className="inline-flex flex-wrap gap-0.5 rounded-full bg-white/70 p-1 ring-1 ring-black/[0.06] shadow-sm">
+      <div className="inline-flex flex-wrap gap-1 rounded-2xl bg-white p-1 ring-2 ring-stone-200 shadow-[0_4px_0_0_var(--color-stone-200)]">
         {LANGUAGES.map((l) => {
           const active = l.code === value.code;
           return (
@@ -62,10 +62,10 @@ export default function LanguagePicker({
               aria-pressed={active}
               title={l.name}
               lang={l.code}
-              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
+              className={`rounded-xl px-3 py-1.5 text-sm font-extrabold transition ${
                 active
-                  ? "bg-ink text-stone-50 shadow-sm"
-                  : "text-stone-600 hover:bg-stone-900/5 hover:text-ink"
+                  ? "bg-orange-500 text-white shadow-[0_3px_0_0_var(--color-orange-700)]"
+                  : "text-stone-500 hover:bg-stone-100 hover:text-ink"
               }`}
             >
               {l.native}

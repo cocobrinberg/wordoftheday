@@ -9,8 +9,9 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-sans: var(--font-body), ui-rounded, system-ui, sans-serif;
+  /* Headings use the rounded display face; the class name stays font-serif. */
+  --font-serif: var(--font-display), var(--font-body), ui-rounded, sans-serif;
   --color-ink: var(--ink);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
@@ -18,11 +19,22 @@
 
 body {
   background-color: var(--page-bg);
-  /* A soft glow and fine paper grain on top of the chosen color. */
+  /* Soft colored blobs in the theme's own colors, plus a faint dot grid. */
   background-image:
-    radial-gradient(1200px 600px at 50% -200px, rgb(255 255 255 / 0.75), transparent 70%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    radial-gradient(40rem 28rem at 8% -6rem, color-mix(in oklab, var(--color-orange-200) 55%, transparent), transparent 70%),
+    radial-gradient(36rem 26rem at 105% 10rem, color-mix(in oklab, var(--color-yellow-200) 50%, transparent), transparent 70%),
+    radial-gradient(color-mix(in oklab, var(--ink) 9%, transparent) 1px, transparent 1.4px);
+  background-size:
+    auto,
+    auto,
+    22px 22px;
   background-attachment: fixed;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 ::selection {
@@ -30,15 +42,16 @@ body {
   color: var(--ink);
 }
 
+/* Chunky white card that sits on a solid "ledge", like a game tile. */
 @utility card {
-  @apply rounded-2xl bg-white/85 ring-1 ring-black/[0.06] backdrop-blur-sm;
+  @apply rounded-3xl bg-white ring-2 ring-stone-200/80;
   box-shadow:
-    0 1px 2px color-mix(in oklab, var(--ink) 4%, transparent),
-    0 12px 32px -16px color-mix(in oklab, var(--ink) 18%, transparent);
+    0 5px 0 0 var(--color-stone-200),
+    0 18px 36px -20px color-mix(in oklab, var(--ink) 25%, transparent);
 }
 
 @utility eyebrow {
-  @apply text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-stone-500;
+  @apply text-xs font-extrabold uppercase tracking-[0.12em] text-stone-500;
 }
 
 @utility page-title {
@@ -46,28 +59,33 @@ body {
 }
 
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed disabled:opacity-40;
+  @apply relative inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-[0.95rem] font-extrabold tracking-wide transition-all duration-100 select-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-orange-300 disabled:cursor-not-allowed disabled:opacity-50;
 }
 
-/* Chunky game-style button: a solid "base" underneath that it presses into. */
+/* Bright 3D button in the theme's accent: it presses down into its base. */
 @utility btn-primary {
-  @apply btn bg-ink text-stone-50 shadow-[0_4px_0_0_rgb(0_0_0/0.45),0_10px_20px_-10px_rgb(from_var(--ink)_r_g_b/0.6)] hover:-translate-y-px hover:bg-stone-800 hover:shadow-[0_5px_0_0_rgb(0_0_0/0.45),0_12px_22px_-10px_rgb(from_var(--ink)_r_g_b/0.6)] active:translate-y-[3px] active:shadow-[0_1px_0_0_rgb(0_0_0/0.45)] disabled:translate-y-0 disabled:shadow-none;
+  @apply btn bg-orange-500 text-white shadow-[0_5px_0_0_var(--color-orange-700)] [text-shadow:0_1px_0_rgb(0_0_0/0.15)] hover:-translate-y-px hover:bg-orange-400 hover:shadow-[0_6px_0_0_var(--color-orange-700)] active:translate-y-[4px] active:shadow-[0_1px_0_0_var(--color-orange-700)] disabled:translate-y-0 disabled:shadow-[0_5px_0_0_var(--color-orange-700)];
 }
 
 @utility btn-go {
-  @apply btn bg-emerald-500 text-white shadow-[0_4px_0_0_var(--color-emerald-700),0_10px_20px_-10px_rgb(4_120_87/0.7)] hover:-translate-y-px hover:bg-emerald-400 active:translate-y-[3px] active:shadow-[0_1px_0_0_var(--color-emerald-700)] disabled:translate-y-0 disabled:shadow-none;
+  @apply btn bg-emerald-500 text-white shadow-[0_5px_0_0_var(--color-emerald-700)] [text-shadow:0_1px_0_rgb(0_0_0/0.15)] hover:-translate-y-px hover:bg-emerald-400 hover:shadow-[0_6px_0_0_var(--color-emerald-700)] active:translate-y-[4px] active:shadow-[0_1px_0_0_var(--color-emerald-700)] disabled:translate-y-0;
 }
 
 @utility btn-secondary {
-  @apply btn bg-white/80 text-stone-700 ring-1 ring-stone-300 hover:bg-white hover:text-ink hover:ring-stone-400;
+  @apply btn bg-white text-stone-700 ring-2 ring-stone-200 shadow-[0_4px_0_0_var(--color-stone-200)] hover:-translate-y-px hover:bg-stone-50 hover:text-ink active:translate-y-[3px] active:shadow-[0_1px_0_0_var(--color-stone-200)];
 }
 
 @utility input {
-  @apply w-full rounded-xl border-0 bg-white px-4 py-2.5 text-base text-ink ring-1 ring-stone-300 transition-shadow outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-ink;
+  @apply w-full rounded-2xl border-0 bg-stone-50 px-4 py-3 text-base font-semibold text-ink ring-2 ring-stone-200 transition outline-none placeholder:font-medium placeholder:text-stone-400 focus:bg-white focus:ring-orange-400;
 }
 
 @utility link {
-  @apply font-medium text-ink underline decoration-stone-300 decoration-2 underline-offset-4 transition-colors hover:decoration-accent;
+  @apply font-bold text-orange-600 underline decoration-orange-200 decoration-2 underline-offset-4 transition-colors hover:text-orange-700 hover:decoration-orange-400;
+}
+
+/* A small rounded chip, for counts and labels on cards. */
+@utility chip {
+  @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-extrabold;
 }
 
 @utility alert-error {
