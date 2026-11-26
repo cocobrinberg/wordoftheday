@@ -16,7 +16,9 @@ export type Word = {
 
 export type Attempt = {
   id: number;
-  word_id: number;
+  /** Null for practice-bank answers, which store `bank_word` instead. */
+  word_id: number | null;
+  bank_word?: string | null;
   correct: boolean;
   created_at: string;
 };
@@ -106,6 +108,25 @@ export function onAttemptSaved(listener: (a: Attempt) => void) {
 /** Saves one quiz answer for the signed-in account and returns the saved row. */
 export async function recordAttempt(token: string, wordId: number, correct: boolean): Promise<Attempt> {
   const saved = await saveAttempt(token, wordId, correct);
+  attemptListeners.forEach((l) => l(saved));
+  return saved;
+}
+
+/**
+ * Saves one practice-bank answer so it counts on the leaderboard. Returns null
+ * (not saved) until supabase/leaderboard.sql has been run.
+ */
+export async function recordBankAttempt(token: string, word: string, correct: boolean): Promise<Attempt | null> {
+  const { data, error } = await supabase.rpc("record_bank_attempt", {
+    p_token: token,
+    p_word: word,
+    p_correct: correct,
+  });
+  if (error) {
+    if (missingFunction(error)) return null;
+    throw new Error(error.message);
+  }
+  const saved = (data as Attempt[])[0];
   attemptListeners.forEach((l) => l(saved));
   return saved;
 }

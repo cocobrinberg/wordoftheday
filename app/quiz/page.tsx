@@ -6,6 +6,7 @@ import {
   fetchAttempts,
   fetchWordsThroughToday,
   recordAttempt,
+  recordBankAttempt,
   type Attempt,
   type Word,
 } from "@/lib/supabase";
@@ -162,11 +163,15 @@ export default function Quiz() {
       }));
     };
 
-    // Only words of the day are saved; they're what the Stats tab tracks.
-    if (question.target.id < 0) return award(false);
+    // Every answer is saved so it counts on the leaderboard. Practice-bank
+    // words have no database row, so they're saved by name.
+    const isBank = question.target.id < 0;
     setSaving(true);
     try {
-      const saved = await recordAttempt(token, question.target.id, correct);
+      const saved = isBank
+        ? await recordBankAttempt(token, question.target.word, correct)
+        : await recordAttempt(token, question.target.id, correct);
+      if (!saved) return award(false); // the database isn't set up for bank words yet
       setAttempts((a) => [...a, saved]);
       noteAnswerToday();
       award(true);

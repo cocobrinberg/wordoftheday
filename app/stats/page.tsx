@@ -19,6 +19,8 @@ import { fetchStreaks, type StreakRow } from "@/lib/streak";
 
 /** Answers needed before someone shows up on the leaderboard. */
 const MIN_TO_RANK = 5;
+/** How often the open Stats page reloads the leaderboard. */
+const BOARD_REFRESH_MS = 10_000;
 
 type Tally = { right: number; total: number };
 type Area = Tally & { name: string };
@@ -46,7 +48,7 @@ function summarize(words: Word[], attempts: Attempt[]) {
   const areas = new Map<string, Area>();
   const perWord = new Map<number, WordTally>();
   for (const a of attempts) {
-    const w = byId.get(a.word_id);
+    const w = a.word_id === null ? undefined : byId.get(a.word_id);
     if (!w) continue; // word isn't in the quiz pool any more
     const add = (t: Tally) => {
       t.total++;
@@ -100,9 +102,20 @@ export default function Stats() {
       );
       loadBoards().catch(() => {});
     });
+
+    // Other players' answers show up on their own while this page is open.
+    const refresh = () => {
+      if (document.visibilityState === "visible") loadBoards().catch(() => {});
+    };
+    const timer = setInterval(refresh, BOARD_REFRESH_MS);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
     return () => {
       live = false;
       stop();
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
     };
   }, [token]);
 
@@ -256,8 +269,18 @@ function Leaderboard({
   me: string;
 }) {
   const [view, setView] = useState<"accuracy" | "streaks">("accuracy");
-  const ranked = rows.filter((r) => r.total >= MIN_TO_RANK);
-  const mine = rows.find((r) => r.username === me);
+  // Everyone is listed. People with enough answers are ranked by accuracy;
+  // the rest follow, most answers first, until they've answered enough.
+  const all = rows.some((r) => r.username === me)
+    ? rows
+    : [...rows, { username: me, right_count: 0, total: 0, percent: 0 }];
+  const ranked = all.filter((r) => r.total >= MIN_TO_RANK);
+  const unranked = all
+    .filter((r) => r.total < MIN_TO_RANK)
+    .sort((a, b) => b.total - a.total || a.username.localeCompare(b.username));
+  const everyone = [...ranked, ...unranked];
+  const rk = ranks(ranked, (a, b) => a.percent === b.percent && a.total === b.total);
+  const mine = all.find((r) => r.username === me);
   const needed = MIN_TO_RANK - (mine?.total ?? 0);
   const streakOf = new Map((streaks ?? []).map((s) => [s.username, s]));
   const onFire = (streaks ?? []).filter((s) => s.current_streak > 0);
@@ -273,7 +296,7 @@ function Leaderboard({
           <p className="mt-1 text-sm text-stone-600">
             {showStreaks
               ? "Everyone with a streak going, ranked by days in a row."
-              : `Everyone who has answered at least ${MIN_TO_RANK} questions, ranked by percentage right.`}
+              : `Everyone playing, ranked by percentage right once they've answered ${MIN_TO_RANK} questions. Updates live.`}
           </p>
         </div>
         {streaks !== null && (
@@ -313,43 +336,55 @@ function Leaderboard({
         <>
           {needed > 0 && (
             <p className="alert-note mt-5">
-              Answer {needed} more {needed === 1 ? "question" : "questions"} to join the leaderboard.
+              Answer {needed} more {needed === 1 ? "question" : "questions"} to get a rank.
             </p>
           )}
-          {ranked.length === 0 ? (
+          {everyone.length === 0 ? (
             <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
           ) : (
             <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
-              {(() => {
-                const rk = ranks(ranked, (a, b) => a.percent === b.percent && a.total === b.total);
-                return ranked.map((r, i) => {
-                  const isMe = r.username === me;
-                  return (
-                    <li
-                      key={r.username}
-                      className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""}`}
-                      aria-current={isMe ? "true" : undefined}
+              {everyone.map((r, i) => {
+                const isMe = r.username === me;
+                const rank = i < ranked.length ? rk[i] : null;
+                const toGo = MIN_TO_RANK - r.total;
+                return (
+                  <li
+                    key={r.username}
+                    className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""} ${
+                      rank === null ? "text-stone-500" : ""
+                    }`}
+                    aria-current={isMe ? "true" : undefined}
+                  >
+                    <span
+                      className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${
+                        rank === null ? "text-stone-300" : rankClass(rank)
+                      }`}
+                      aria-label={rank === null ? "Not ranked yet" : `Rank ${rank}`}
                     >
-                      <span
-                        className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${rankClass(rk[i])}`}
-                      >
-                        {rk[i]}
+                      {rank ?? "–"}
+                    </span>
+                    <span className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className={`truncate font-medium ${rank === null ? "" : "text-ink"}`}>
+                        {r.username}
                       </span>
-                      <span className="flex min-w-0 flex-1 items-center gap-2">
-                        <span className="truncate font-medium">{r.username}</span>
-                        {isMe && <span className="text-sm font-normal text-stone-500">(you)</span>}
-                        <StreakChip days={streakOf.get(r.username)?.current_streak ?? 0} />
-                      </span>
-                      <span className="text-right">
-                        <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
-                        <span className="block text-xs text-stone-500">
-                          {r.right_count}/{r.total}
+                      {isMe && <span className="text-sm font-normal text-stone-500">(you)</span>}
+                      <StreakChip days={streakOf.get(r.username)?.current_streak ?? 0} />
+                    </span>
+                    <span className="text-right">
+                      {rank === null ? (
+                        <span className="block text-xs">
+                          {toGo} more to rank
                         </span>
+                      ) : (
+                        <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
+                      )}
+                      <span className="block text-xs text-stone-500">
+                        {r.right_count}/{r.total}
                       </span>
-                    </li>
-                  );
-                });
-              })()}
+                    </span>
+                  </li>
+                );
+              })}
             </ol>
           )}
         </>
