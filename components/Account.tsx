@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { applyTheme } from "@/lib/theme";
 import { Loading } from "@/components/Status";
 
 const TOKEN_KEY = "wotd-session";
@@ -53,7 +54,7 @@ function storage(key: string, value?: string | null) {
 }
 
 function applyBackground(hex: string) {
-  document.documentElement.style.setProperty("--page-bg", hex);
+  applyTheme(hex);
   storage(BG_KEY, hex);
 }
 
