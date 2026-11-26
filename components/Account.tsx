@@ -7,7 +7,7 @@ import { applyTheme } from "@/lib/theme";
 import { Loading } from "@/components/Status";
 import { StreakSync } from "@/components/Streak";
 import { XpSync } from "@/components/Game";
-import BattleInvites from "@/components/BattleInvites";
+import BattleInvites, { BattleBanner } from "@/components/BattleInvites";
 
 const TOKEN_KEY = "wotd-session";
 const BG_KEY = "wotd-background";
@@ -189,7 +189,10 @@ export default function AccountGate({ children }: { children: ReactNode }) {
           </button>
         </section>
       ) : (
-        children
+        <>
+          <BattleBanner />
+          {children}
+        </>
       )}
     </Ctx.Provider>
   );

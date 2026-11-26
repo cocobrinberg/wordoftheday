@@ -5,8 +5,6 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { StreakBadge } from "@/components/Streak";
 import { LevelBadge } from "@/components/Game";
-import { BattleButton } from "@/components/BattleInvites";
-import { useXp } from "@/lib/xp";
 
 const icon = (d: ReactNode) => (
   <svg
@@ -77,7 +75,6 @@ const links: Tab[] = [
 
 export default function Nav() {
   const pathname = usePathname();
-  const signedIn = useXp() !== null;
   const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
   return (
@@ -126,7 +123,6 @@ export default function Nav() {
           <div className="flex shrink-0 items-center gap-2">
             <LevelBadge className="flex" />
             <StreakBadge />
-            {signedIn && <BattleButton compact />}
           </div>
         </nav>
       </header>
