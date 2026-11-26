@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { applyTheme } from "@/lib/theme";
 import { Loading } from "@/components/Status";
+import { StreakSync } from "@/components/Streak";
 
 const TOKEN_KEY = "wotd-session";
 const BG_KEY = "wotd-background";
@@ -150,6 +151,7 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   const needsHobbies = (account.hobbies?.length ?? 0) < HOBBY_COUNT;
   return (
     <Ctx.Provider value={value}>
+      <StreakSync token={token!} />
       {needsHobbies ? (
         <section className="animate-rise mx-auto max-w-md">
           <StepLabel step={1} />
