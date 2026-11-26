@@ -20,9 +20,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${sans.variable} ${serif.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-(--page-bg) font-sans text-ink transition-colors">
         <Nav />
-        <SuggestButton />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:py-14">
-          <AccountGate>{children}</AccountGate>
+          {/* Inside the gate so the button only shows once someone is signed in and set up. */}
+          <AccountGate>
+            <SuggestButton />
+            {children}
+          </AccountGate>
         </main>
         <footer className="mx-auto w-full max-w-3xl px-4 pb-8 pt-4 text-center text-xs text-stone-500">
           A new word every morning, New York time.
