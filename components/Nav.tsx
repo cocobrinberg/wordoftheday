@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { StreakBadge } from "@/components/Streak";
 
 const links = [
   { href: "/", label: "Today" },
@@ -30,6 +31,8 @@ export default function Nav() {
             Word of the Day
           </span>
         </Link>
+        <div className="flex min-w-0 items-center gap-2">
+        <StreakBadge />
         <ul className="flex min-w-0 gap-0.5 overflow-x-auto rounded-full bg-white/70 p-1 text-sm ring-1 ring-black/[0.06] shadow-sm [scrollbar-width:none]">
           {links.map((l) => {
             const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
@@ -50,6 +53,7 @@ export default function Nav() {
             );
           })}
         </ul>
+        </div>
       </nav>
     </header>
   );

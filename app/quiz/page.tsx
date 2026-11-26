@@ -12,6 +12,7 @@ import {
 import { WORD_BANK } from "@/lib/wordBank";
 import { Loading, ErrorMessage } from "@/components/Status";
 import { useAccount } from "@/components/Account";
+import { noteAnswerToday } from "@/lib/streak";
 
 type Question = { target: Word; choices: Word[] };
 
@@ -143,6 +144,7 @@ export default function Quiz() {
     try {
       const saved = await recordAttempt(token, question.target.id, correct);
       setAttempts((a) => [...a, saved]);
+      noteAnswerToday();
     } catch (e) {
       setError(`Could not save your answer: ${e instanceof Error ? e.message : String(e)}`);
     } finally {

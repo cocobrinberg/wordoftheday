@@ -12,6 +12,8 @@ import {
 } from "@/lib/supabase";
 import { Loading, ErrorMessage } from "@/components/Status";
 import { useAccount } from "@/components/Account";
+import { Flame, StreakCard, StreakChip } from "@/components/Streak";
+import { fetchStreaks, type StreakRow } from "@/lib/streak";
 
 /** Answers needed before someone shows up on the leaderboard. */
 const MIN_TO_RANK = 5;
@@ -70,12 +72,13 @@ export default function Stats() {
     words: Word[];
     attempts: Attempt[];
     board: LeaderboardRow[] | null;
+    streaks: StreakRow[] | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([fetchPastWords(), fetchAttempts(token), fetchLeaderboard()])
-      .then(([words, attempts, board]) => setData({ words, attempts, board }))
+    Promise.all([fetchPastWords(), fetchAttempts(token), fetchLeaderboard(), fetchStreaks()])
+      .then(([words, attempts, board, streaks]) => setData({ words, attempts, board, streaks }))
       .catch((e) => setError(e.message ?? String(e)));
   }, [token]);
 
@@ -91,6 +94,10 @@ export default function Stats() {
         <h1 id="mine" className="page-title mt-2">
           Your stats
         </h1>
+
+        <div className="mt-8">
+          <StreakCard />
+        </div>
 
         {overall.total === 0 ? (
           <div className="card mt-8 p-6 text-stone-600">
@@ -186,79 +193,187 @@ export default function Stats() {
         )}
       </section>
 
-      {data.board && <Leaderboard rows={data.board} me={account.username} />}
+      {data.board && (
+        <Leaderboard rows={data.board} streaks={data.streaks} me={account.username} />
+      )}
     </div>
   );
 }
 
-function Leaderboard({ rows, me }: { rows: LeaderboardRow[]; me: string }) {
+function rankClass(rank: number) {
+  return rank === 1
+    ? "bg-amber-300 text-amber-950"
+    : rank === 2
+      ? "bg-stone-300 text-stone-800"
+      : rank === 3
+        ? "bg-orange-200 text-orange-900"
+        : "text-stone-400";
+}
+
+/** Standard competition ranking: equal entries share a rank. */
+function ranks<T>(rows: T[], same: (a: T, b: T) => boolean) {
+  const out: number[] = [];
+  rows.forEach((r, i) => out.push(i > 0 && same(rows[i - 1], r) ? out[i - 1] : i + 1));
+  return out;
+}
+
+function Leaderboard({
+  rows,
+  streaks,
+  me,
+}: {
+  rows: LeaderboardRow[];
+  streaks: StreakRow[] | null;
+  me: string;
+}) {
+  const [view, setView] = useState<"accuracy" | "streaks">("accuracy");
   const ranked = rows.filter((r) => r.total >= MIN_TO_RANK);
   const mine = rows.find((r) => r.username === me);
   const needed = MIN_TO_RANK - (mine?.total ?? 0);
+  const streakOf = new Map((streaks ?? []).map((s) => [s.username, s]));
+  const onFire = (streaks ?? []).filter((s) => s.current_streak > 0);
+  const showStreaks = streaks !== null && view === "streaks";
 
   return (
     <section aria-labelledby="board">
-      <h2 id="board" className="font-serif text-4xl font-semibold tracking-tight">
-        Leaderboard
-      </h2>
-      <p className="mt-1 text-sm text-stone-600">
-        Everyone who has answered at least {MIN_TO_RANK} questions, ranked by percentage right.
-      </p>
-
-      {needed > 0 && (
-        <p className="alert-note mt-5">
-          Answer {needed} more {needed === 1 ? "question" : "questions"} to join the leaderboard.
-        </p>
-      )}
-
-      {ranked.length === 0 ? (
-        <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
-      ) : (
-        <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
-          {ranked.map((r, i) => {
-            // Same percentage and same number of answers share a rank.
-            let rank = i + 1;
-            while (
-              rank > 1 &&
-              ranked[rank - 2].percent === r.percent &&
-              ranked[rank - 2].total === r.total
-            )
-              rank--;
-            const isMe = r.username === me;
-            return (
-              <li
-                key={r.username}
-                className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""}`}
-                aria-current={isMe ? "true" : undefined}
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 id="board" className="font-serif text-4xl font-semibold tracking-tight">
+            Leaderboard
+          </h2>
+          <p className="mt-1 text-sm text-stone-600">
+            {showStreaks
+              ? "Everyone with a streak going, ranked by days in a row."
+              : `Everyone who has answered at least ${MIN_TO_RANK} questions, ranked by percentage right.`}
+          </p>
+        </div>
+        {streaks !== null && (
+          <div
+            role="tablist"
+            aria-label="Rank by"
+            className="flex rounded-full bg-white/70 p-1 text-sm ring-1 ring-black/[0.06] shadow-sm"
+          >
+            {(["accuracy", "streaks"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                role="tab"
+                aria-selected={view === v}
+                onClick={() => setView(v)}
+                className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium transition-colors ${
+                  view === v ? "bg-ink text-stone-50 shadow-sm" : "text-stone-600 hover:text-ink"
+                }`}
               >
-                <span
-                  className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${
-                    rank === 1
-                      ? "bg-amber-300 text-amber-950"
-                      : rank === 2
-                        ? "bg-stone-300 text-stone-800"
-                        : rank === 3
-                          ? "bg-orange-200 text-orange-900"
-                          : "text-stone-400"
-                  }`}
-                >
-                  {rank}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-medium">
-                  {r.username}
-                  {isMe && <span className="ml-2 text-sm font-normal text-stone-500">(you)</span>}
-                </span>
-                <span className="text-right">
-                  <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
-                  <span className="block text-xs text-stone-500">
-                    {r.right_count}/{r.total}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+                {v === "streaks" && <Flame className="size-4" />}
+                {v === "accuracy" ? "Accuracy" : "Streaks"}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {showStreaks ? (
+        onFire.length === 0 ? (
+          <p className="card mt-5 p-6 text-center text-stone-600">
+            Nobody has a streak going. Answer a quiz question to be the first!
+          </p>
+        ) : (
+          <StreakBoard rows={onFire} me={me} />
+        )
+      ) : (
+        <>
+          {needed > 0 && (
+            <p className="alert-note mt-5">
+              Answer {needed} more {needed === 1 ? "question" : "questions"} to join the leaderboard.
+            </p>
+          )}
+          {ranked.length === 0 ? (
+            <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
+          ) : (
+            <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
+              {(() => {
+                const rk = ranks(ranked, (a, b) => a.percent === b.percent && a.total === b.total);
+                return ranked.map((r, i) => {
+                  const isMe = r.username === me;
+                  return (
+                    <li
+                      key={r.username}
+                      className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""}`}
+                      aria-current={isMe ? "true" : undefined}
+                    >
+                      <span
+                        className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${rankClass(rk[i])}`}
+                      >
+                        {rk[i]}
+                      </span>
+                      <span className="flex min-w-0 flex-1 items-center gap-2">
+                        <span className="truncate font-medium">{r.username}</span>
+                        {isMe && <span className="text-sm font-normal text-stone-500">(you)</span>}
+                        <StreakChip days={streakOf.get(r.username)?.current_streak ?? 0} />
+                      </span>
+                      <span className="text-right">
+                        <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
+                        <span className="block text-xs text-stone-500">
+                          {r.right_count}/{r.total}
+                        </span>
+                      </span>
+                    </li>
+                  );
+                });
+              })()}
+            </ol>
+          )}
+        </>
       )}
     </section>
+  );
+}
+
+function StreakBoard({ rows, me }: { rows: StreakRow[]; me: string }) {
+  const rk = ranks(rows, (a, b) => a.current_streak === b.current_streak);
+  const top = rows[0].current_streak;
+  return (
+    <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
+      {rows.map((r, i) => {
+        const isMe = r.username === me;
+        return (
+          <li
+            key={r.username}
+            className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""}`}
+            aria-current={isMe ? "true" : undefined}
+          >
+            <span
+              className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${rankClass(rk[i])}`}
+            >
+              {rk[i]}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-medium">
+                {r.username}
+                {isMe && <span className="ml-2 text-sm font-normal text-stone-500">(you)</span>}
+              </span>
+              <span
+                className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-stone-100"
+                aria-hidden
+              >
+                <span
+                  className="block h-full rounded-full bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500"
+                  style={{ width: `${(100 * r.current_streak) / top}%` }}
+                />
+              </span>
+            </span>
+            <span className="flex items-center gap-1.5 text-right">
+              <Flame className={`size-6 ${rk[i] === 1 ? "animate-flicker" : ""}`} />
+              <span>
+                <span className="block font-serif text-xl leading-none font-semibold tabular-nums">
+                  {r.current_streak}
+                </span>
+                <span className="block text-xs text-stone-500">best {r.best_streak}</span>
+              </span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
