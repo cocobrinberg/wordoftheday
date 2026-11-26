@@ -61,68 +61,85 @@ export default function Home() {
   const shown = current?.status === "done" ? current.data : null;
 
   return (
-    <article>
-      <p className="text-sm font-medium uppercase tracking-widest text-amber-700">
-        {formatDay(today)}
-      </p>
-
-      <div className="mt-6">
+    <article className="animate-rise">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="eyebrow text-accent">{formatDay(today)}</p>
+          <p className="mt-2 font-serif text-2xl italic text-stone-600">Your word for today</p>
+        </div>
         <LanguagePicker value={lang} onChange={setLang} />
-      </div>
+      </header>
 
       {current?.status === "error" ? (
         <div className="mt-8">
           <ErrorMessage message={current.message} />
         </div>
       ) : !shown ? (
-        <div className="mt-8">
+        <div className="card mt-6">
           <Loading />
         </div>
       ) : (
-        <div lang={lang.code} dir={lang.rtl ? "rtl" : "ltr"} className="mt-8">
-          <p lang="en" dir="ltr" className="text-sm text-stone-500">
-            Picked for your love of <span className="font-medium text-stone-800">{shown.hobby}</span>
-          </p>
-          <p className="mt-4 flex flex-wrap items-baseline gap-x-3">
-            {shown.phonetic && (
-              <span
-                lang={lang.code.startsWith("zh") ? "zh-Latn-pinyin" : undefined}
-                className="text-2xl tracking-wide text-amber-700"
-              >
-                {shown.phonetic}
-              </span>
-            )}
-            <span lang="en" dir="ltr" className="text-sm text-stone-500">
-              click for pronunciation
+        <div
+          key={key}
+          lang={lang.code}
+          dir={lang.rtl ? "rtl" : "ltr"}
+          className="card animate-rise relative mt-6 overflow-hidden px-6 py-8 sm:px-10 sm:py-12"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-24 -right-24 size-64 rounded-full bg-amber-200/40 blur-3xl"
+          />
+          <p lang="en" dir="ltr" className="relative">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-amber-900 ring-1 ring-amber-200">
+              <span aria-hidden>✦</span> Picked for your love of {shown.hobby}
             </span>
           </p>
-          <h1 className="mt-1 break-words font-serif text-5xl font-semibold tracking-tight sm:text-6xl">
+
+          <h1 className="relative mt-6 break-words font-serif text-5xl leading-[1.05] font-semibold tracking-tight sm:text-7xl">
+            {shown.word}
+          </h1>
+
+          <div className="relative mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
             <button
               type="button"
               onClick={() => pronounce(shown.word, lang.code)}
               title="Hear it pronounced"
-              className="cursor-pointer rounded-md text-start underline decoration-amber-300 decoration-dotted underline-offset-8 hover:text-amber-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-amber-500"
+              className="group inline-flex items-center gap-2 rounded-full bg-white py-1.5 ps-1.5 pe-4 ring-1 ring-stone-200 transition hover:ring-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              {shown.word}
+              <span className="grid size-7 place-items-center rounded-full bg-ink text-stone-50 transition group-hover:bg-accent">
+                <SpeakerIcon />
+              </span>
+              {shown.phonetic ? (
+                <span
+                  lang={lang.code.startsWith("zh") ? "zh-Latn-pinyin" : undefined}
+                  className="text-lg tracking-wide text-stone-700"
+                >
+                  {shown.phonetic}
+                </span>
+              ) : (
+                <span lang="en" dir="ltr" className="text-sm font-medium text-stone-700">
+                  Hear it
+                </span>
+              )}
             </button>
-          </h1>
-          <p className="mt-2 font-serif text-lg italic text-stone-500">
-            {shown.part_of_speech}
+            <span className="font-serif text-lg italic text-stone-500">{shown.part_of_speech}</span>
             {!isEnglish && (
-              <span lang="en" dir="ltr" className="not-italic">
-                {" "}
-                &middot; English: <span className="italic">{shown.english}</span>
+              <span lang="en" dir="ltr" className="text-sm text-stone-500">
+                English: <span className="font-serif text-base italic text-stone-700">{shown.english}</span>
               </span>
             )}
-          </p>
-          <p lang="en" dir="ltr" className="mt-8 text-xl leading-relaxed text-stone-800">
+          </div>
+
+          <hr className="relative my-8 border-stone-200" />
+
+          <p lang="en" dir="ltr" className="relative text-xl leading-relaxed text-stone-800 sm:text-2xl">
             {shown.definition}
           </p>
           {shown.example && (
             <blockquote
-              className={`mt-8 font-serif text-lg italic leading-relaxed text-stone-600 ${
-                lang.rtl ? "border-r-4 pr-4" : "border-l-4 pl-4"
-              } border-amber-400`}
+              className={`relative mt-8 rounded-xl bg-stone-50 px-5 py-4 font-serif text-lg italic leading-relaxed text-stone-600 ring-1 ring-stone-200/70 ${
+                lang.rtl ? "border-r-4" : "border-l-4"
+              } border-accent`}
             >
               &ldquo;{shown.example}&rdquo;
             </blockquote>
@@ -131,22 +148,33 @@ export default function Home() {
       )}
 
       {shared && (
-        <aside className="mt-12 rounded-xl border border-stone-200 bg-white/60 p-4">
-          <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
-            Everyone&rsquo;s word today
-          </p>
-          <p className="mt-1">
-            <span className="font-serif text-xl font-semibold">{shared.word}</span>{" "}
-            <span className="font-serif italic text-stone-500">{shared.part_of_speech}</span>
-          </p>
-          <p className="mt-1 text-stone-700">{shared.definition}</p>
-          <p className="mt-2 text-sm text-stone-500">
-            The <Link href="/quiz" className="underline underline-offset-2">quiz</Link> and{" "}
-            <Link href="/history" className="underline underline-offset-2">history</Link> use
-            these shared words.
-          </p>
+        <aside className="card mt-8 grid gap-5 p-6 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div>
+            <p className="eyebrow">Everyone&rsquo;s word today</p>
+            <p className="mt-2">
+              <span className="font-serif text-2xl font-semibold">{shared.word}</span>{" "}
+              <span className="font-serif italic text-stone-500">{shared.part_of_speech}</span>
+            </p>
+            <p className="mt-1 text-stone-700">{shared.definition}</p>
+            <p className="mt-3 text-sm text-stone-500">
+              The quiz and <Link href="/history" className="link">history</Link> use these shared
+              words.
+            </p>
+          </div>
+          <Link href="/quiz" className="btn-primary">
+            Take the quiz &rarr;
+          </Link>
         </aside>
       )}
     </article>
+  );
+}
+
+function SpeakerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M11 5 6 9H3v6h3l5 4V5Z" fill="currentColor" />
+      <path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" />
+    </svg>
   );
 }

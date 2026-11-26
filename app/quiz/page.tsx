@@ -97,45 +97,59 @@ export default function Quiz() {
   if (!words) return <Loading />;
   if (!question)
     return (
-      <p className="text-lg text-stone-600">
-        The quiz needs at least two past words. Come back in a day or two!
-      </p>
+      <div className="card p-8 text-center">
+        <p className="font-serif text-2xl font-semibold">Not enough words yet</p>
+        <p className="mt-2 text-stone-600">
+          The quiz needs at least two past words. Come back in a day or two!
+        </p>
+      </div>
     );
 
   const answered = picked !== null;
   const gotIt = picked === question.target.id;
 
   return (
-    <section>
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="font-serif text-3xl font-semibold tracking-tight">Quiz</h1>
+    <section className="animate-rise">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow text-accent">Practice</p>
+          <h1 className="page-title mt-2">Quiz</h1>
+        </div>
         <div className="flex items-center gap-3">
-          <Link
-            href="/stats"
-            className="text-sm text-stone-600 underline underline-offset-2 hover:text-stone-900"
-          >
+          <Link href="/stats" className="link text-sm">
             Your stats
           </Link>
-          <p className="rounded-full bg-white px-3 py-1 text-sm text-stone-600 ring-1 ring-stone-200">
-            Score: <span className="font-semibold text-stone-900">{score.right}</span> / {score.total}
+          <p className="card flex items-baseline gap-1.5 rounded-full px-4 py-1.5 text-sm text-stone-500">
+            Score
+            <span className="font-serif text-lg font-semibold text-ink tabular-nums">{score.right}</span>
+            <span className="tabular-nums">/ {score.total}</span>
           </p>
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-stone-200 bg-white p-5 sm:p-6">
-        <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
-          Which word means&hellip;
+      <div key={question.target.id} className="card animate-rise mt-8 px-6 py-7 sm:px-8 sm:py-9">
+        <p className="eyebrow">Which word means&hellip;</p>
+        <p className="mt-3 font-serif text-2xl leading-snug text-ink sm:text-3xl">
+          {question.target.definition}
         </p>
-        <p className="mt-2 text-lg leading-relaxed sm:text-xl">{question.target.definition}</p>
       </div>
 
       <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-        {question.choices.map((c) => {
-          let style = "border-stone-200 bg-white hover:border-stone-400 hover:bg-stone-100";
+        {question.choices.map((c, i) => {
+          let style =
+            "bg-white/85 ring-black/[0.08] hover:-translate-y-0.5 hover:ring-ink hover:shadow-md";
+          let badge = "bg-stone-100 text-stone-500 group-hover:bg-ink group-hover:text-stone-50";
           if (answered) {
-            if (c.id === question.target.id) style = "border-emerald-500 bg-emerald-50 text-emerald-900";
-            else if (c.id === picked) style = "border-red-400 bg-red-50 text-red-900";
-            else style = "border-stone-200 bg-white text-stone-400";
+            if (c.id === question.target.id) {
+              style = "bg-emerald-50 ring-2 ring-emerald-500 text-emerald-950";
+              badge = "bg-emerald-500 text-white";
+            } else if (c.id === picked) {
+              style = "bg-rose-50 ring-2 ring-rose-400 text-rose-950";
+              badge = "bg-rose-400 text-white";
+            } else {
+              style = "bg-white/60 ring-black/[0.06] text-stone-400";
+              badge = "bg-stone-100 text-stone-400";
+            }
           }
           return (
             <li key={c.id}>
@@ -143,9 +157,18 @@ export default function Quiz() {
                 type="button"
                 onClick={() => answer(c)}
                 disabled={answered}
-                className={`w-full rounded-xl border-2 px-4 py-3.5 text-left font-serif text-lg transition-colors disabled:cursor-default ${style}`}
+                className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-1 shadow-sm transition disabled:cursor-default ${style}`}
               >
-                {c.word}
+                <span
+                  className={`grid size-8 shrink-0 place-items-center rounded-lg text-sm font-semibold transition-colors ${badge}`}
+                >
+                  {answered && c.id === question.target.id
+                    ? "✓"
+                    : answered && c.id === picked
+                      ? "✕"
+                      : "ABCD"[i]}
+                </span>
+                <span className="font-serif text-xl font-medium">{c.word}</span>
               </button>
             </li>
           );
@@ -154,24 +177,24 @@ export default function Quiz() {
 
       {answered && (
         <div
-          className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+          className={`animate-rise mt-6 flex flex-col gap-4 rounded-2xl p-5 ring-1 sm:flex-row sm:items-center sm:justify-between ${
+            gotIt ? "bg-emerald-50 ring-emerald-200" : "bg-rose-50 ring-rose-200"
+          }`}
           aria-live="polite"
         >
-          <p className={`text-lg ${gotIt ? "text-emerald-700" : "text-red-700"}`}>
+          <p className={`text-lg ${gotIt ? "text-emerald-900" : "text-rose-900"}`}>
             {gotIt ? (
-              "Correct!"
+              <>
+                <strong className="font-semibold">Correct!</strong> Nicely done.
+              </>
             ) : (
               <>
-                Not quite. The answer is <strong className="font-serif">{question.target.word}</strong>.
+                Not quite. The answer is{" "}
+                <strong className="font-serif font-semibold">{question.target.word}</strong>.
               </>
             )}
           </p>
-          <button
-            type="button"
-            onClick={next}
-            disabled={saving}
-            className="rounded-full bg-stone-900 px-5 py-2.5 font-medium text-stone-50 hover:bg-stone-700 disabled:opacity-60"
-          >
+          <button type="button" onClick={next} disabled={saving} className="btn-primary shrink-0">
             Next question &rarr;
           </button>
         </div>

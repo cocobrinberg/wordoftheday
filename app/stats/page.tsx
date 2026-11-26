@@ -85,28 +85,29 @@ export default function Stats() {
   const { overall, areas, practice } = summarize(data.words, data.attempts);
 
   return (
-    <div className="space-y-12">
+    <div className="animate-rise space-y-14">
       <section aria-labelledby="mine">
-        <h1 id="mine" className="font-serif text-3xl font-semibold tracking-tight">
+        <p className="eyebrow text-accent">Progress</p>
+        <h1 id="mine" className="page-title mt-2">
           Your stats
         </h1>
 
         {overall.total === 0 ? (
-          <div className="mt-6 rounded-xl border border-stone-200 bg-white p-6 text-stone-600">
+          <div className="card mt-8 p-6 text-stone-600">
             You haven&rsquo;t answered any quiz questions yet.{" "}
-            <Link href="/quiz" className="font-medium text-stone-900 underline underline-offset-2">
+            <Link href="/quiz" className="link">
               Take the quiz
             </Link>{" "}
             to see your scores here.
           </div>
         ) : (
           <>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-stone-200 bg-white p-5">
-                <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              <div className="card p-6">
+                <p className="eyebrow">
                   Answered correctly
                 </p>
-                <p className={`mt-1 font-serif text-5xl font-semibold ${tone(pct(overall)).text}`}>
+                <p className={`mt-2 font-serif text-6xl font-semibold tabular-nums ${tone(pct(overall)).text}`}>
                   {fmt(pct(overall))}
                 </p>
                 <p className="mt-1 text-sm text-stone-600">
@@ -114,11 +115,11 @@ export default function Stats() {
                 </p>
               </div>
               {areas.length > 0 && (
-                <div className="rounded-xl border border-stone-200 bg-white p-5">
-                  <p className="text-xs font-medium uppercase tracking-widest text-stone-500">
+                <div className="card p-6">
+                  <p className="eyebrow">
                     {areas.length > 1 ? "Weakest area" : "Only area so far"}
                   </p>
-                  <p className="mt-1 font-serif text-3xl font-semibold">{areas[0].name}</p>
+                  <p className="mt-2 font-serif text-4xl font-semibold">{areas[0].name}</p>
                   <p className="mt-1 text-sm text-stone-600">
                     {fmt(pct(areas[0]))} right ({areas[0].right} of {areas[0].total})
                   </p>
@@ -126,15 +127,15 @@ export default function Stats() {
               )}
             </div>
 
-            <h2 className="mt-8 text-xs font-medium uppercase tracking-widest text-stone-500">
+            <h2 className="mt-10 eyebrow">
               By part of speech
             </h2>
-            <ul className="mt-3 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
+            <ul className="mt-3 card divide-y divide-stone-200/70">
               {areas.map((a, i) => {
                 const p = pct(a);
                 const t = tone(p);
                 return (
-                  <li key={a.name} className="p-4">
+                  <li key={a.name} className="p-5">
                     <div className="flex items-baseline justify-between gap-3">
                       <span className="font-medium">
                         {a.name}
@@ -150,7 +151,7 @@ export default function Stats() {
                       </span>
                     </div>
                     <div
-                      className="mt-2 h-2 overflow-hidden rounded-full bg-stone-100"
+                      className="mt-2.5 h-2.5 overflow-hidden rounded-full bg-stone-100"
                       role="img"
                       aria-label={`${a.name}: ${fmt(p)} correct`}
                     >
@@ -163,12 +164,12 @@ export default function Stats() {
 
             {practice.length > 0 && (
               <>
-                <h2 className="mt-8 text-xs font-medium uppercase tracking-widest text-stone-500">
+                <h2 className="mt-10 eyebrow">
                   Words to practice
                 </h2>
-                <ul className="mt-3 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
+                <ul className="mt-3 card divide-y divide-stone-200/70">
                   {practice.map(({ word, right, total }) => (
-                    <li key={word.id} className="flex items-baseline justify-between gap-3 p-4">
+                    <li key={word.id} className="flex items-baseline justify-between gap-3 p-5">
                       <span>
                         <span className="font-serif text-lg font-semibold">{word.word}</span>{" "}
                         <span className="text-sm italic text-stone-500">{word.part_of_speech}</span>
@@ -197,7 +198,7 @@ function Leaderboard({ rows, me }: { rows: LeaderboardRow[]; me: string }) {
 
   return (
     <section aria-labelledby="board">
-      <h2 id="board" className="font-serif text-3xl font-semibold tracking-tight">
+      <h2 id="board" className="font-serif text-4xl font-semibold tracking-tight">
         Leaderboard
       </h2>
       <p className="mt-1 text-sm text-stone-600">
@@ -205,15 +206,15 @@ function Leaderboard({ rows, me }: { rows: LeaderboardRow[]; me: string }) {
       </p>
 
       {needed > 0 && (
-        <p className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+        <p className="alert-note mt-5">
           Answer {needed} more {needed === 1 ? "question" : "questions"} to join the leaderboard.
         </p>
       )}
 
       {ranked.length === 0 ? (
-        <p className="mt-6 text-stone-600">Nobody is on the leaderboard yet.</p>
+        <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
       ) : (
-        <ol className="mt-4 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white">
+        <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
           {ranked.map((r, i) => {
             // Same percentage and same number of answers share a rank.
             let rank = i + 1;
@@ -227,12 +228,18 @@ function Leaderboard({ rows, me }: { rows: LeaderboardRow[]; me: string }) {
             return (
               <li
                 key={r.username}
-                className={`flex items-center gap-4 px-4 py-3 ${isMe ? "bg-amber-50" : ""}`}
+                className={`flex items-center gap-4 px-5 py-3.5 ${isMe ? "bg-accent-soft/70" : ""}`}
                 aria-current={isMe ? "true" : undefined}
               >
                 <span
-                  className={`w-7 text-right font-serif text-lg font-semibold ${
-                    rank <= 3 ? "text-amber-700" : "text-stone-400"
+                  className={`grid size-8 shrink-0 place-items-center rounded-full font-serif text-base font-semibold ${
+                    rank === 1
+                      ? "bg-amber-300 text-amber-950"
+                      : rank === 2
+                        ? "bg-stone-300 text-stone-800"
+                        : rank === 3
+                          ? "bg-orange-200 text-orange-900"
+                          : "text-stone-400"
                   }`}
                 >
                   {rank}
@@ -242,7 +249,7 @@ function Leaderboard({ rows, me }: { rows: LeaderboardRow[]; me: string }) {
                   {isMe && <span className="ml-2 text-sm font-normal text-stone-500">(you)</span>}
                 </span>
                 <span className="text-right">
-                  <span className="block font-semibold">{fmt(r.percent)}</span>
+                  <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
                   <span className="block text-xs text-stone-500">
                     {r.right_count}/{r.total}
                   </span>

@@ -5,31 +5,37 @@ import { BackgroundPicker, HobbiesForm, useAccount } from "@/components/Account"
 export default function AccountPage() {
   const { account, signOut } = useAccount();
   return (
-    <section className="max-w-md">
-      <p className="text-sm font-medium uppercase tracking-widest text-amber-700">Account</p>
-      <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight">{account.username}</h1>
+    <section className="animate-rise mx-auto max-w-xl">
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden
+          className="grid size-14 shrink-0 place-items-center rounded-2xl bg-ink font-serif text-2xl font-semibold text-amber-200 uppercase shadow-sm"
+        >
+          {account.username[0]}
+        </span>
+        <div className="min-w-0">
+          <p className="eyebrow text-accent">Account</p>
+          <h1 className="mt-1 truncate font-serif text-4xl font-semibold tracking-tight">
+            {account.username}
+          </h1>
+        </div>
+      </div>
 
-      <div className="mt-8">
-        <h2 className="text-xs font-medium uppercase tracking-widest text-stone-500">
-          Your hobbies
-        </h2>
+      <div className="card mt-8 p-6">
+        <h2 className="font-serif text-xl font-semibold">Your hobbies</h2>
         <p className="mt-1 text-sm text-stone-600">
           Your daily word rotates through these, one hobby a day.
         </p>
-        <div className="mt-3">
+        <div className="mt-5">
           <HobbiesForm />
         </div>
       </div>
 
-      <div className="mt-10">
+      <div className="card mt-6 p-6">
         <BackgroundPicker />
       </div>
 
-      <button
-        type="button"
-        onClick={signOut}
-        className="mt-10 rounded-full border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-900 hover:text-stone-50"
-      >
+      <button type="button" onClick={signOut} className="btn-secondary mt-8">
         Sign out
       </button>
     </section>

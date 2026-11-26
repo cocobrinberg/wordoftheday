@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { Loading } from "@/components/Status";
 
 const TOKEN_KEY = "wotd-session";
 const BG_KEY = "wotd-background";
@@ -140,7 +141,7 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   }
 
   if (account === undefined) {
-    return <p className="mt-16 text-center text-stone-500">Loading&hellip;</p>;
+    return <Loading />;
   }
   if (!account) return <AuthForm onSignedIn={signedIn} />;
 
@@ -149,33 +150,35 @@ export default function AccountGate({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={value}>
       {needsHobbies ? (
-        <section className="mx-auto max-w-md">
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+        <section className="animate-rise mx-auto max-w-md">
+          <StepLabel step={1} />
+          <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight">
             What do you love doing?
           </h1>
           <p className="mt-2 text-stone-600">
             Tell us five of your hobbies and we&rsquo;ll pick words of the day that match your
             interests.
           </p>
-          <div className="mt-8">
+          <div className="card mt-8 p-6">
             <HobbiesForm submitLabel="Continue" />
           </div>
         </section>
       ) : pickingColor ? (
-        <section className="mx-auto max-w-md">
-          <h1 className="font-serif text-3xl font-semibold tracking-tight">
+        <section className="animate-rise mx-auto max-w-md">
+          <StepLabel step={2} />
+          <h1 className="mt-3 font-serif text-4xl font-semibold tracking-tight">
             Welcome, {account.username}!
           </h1>
           <p className="mt-2 text-stone-600">Pick a background color. You can change it later.</p>
-          <div className="mt-6">
+          <div className="card mt-8 p-6">
             <BackgroundPicker />
           </div>
           <button
             type="button"
             onClick={() => setPickingColor(false)}
-            className="mt-8 w-full rounded-full bg-stone-900 px-4 py-2.5 font-medium text-stone-50 hover:bg-stone-700"
+            className="btn-primary mt-6 w-full py-3"
           >
-            Continue
+            Start learning &rarr;
           </button>
         </section>
       ) : (
@@ -244,11 +247,25 @@ function AuthForm({ onSignedIn }: { onSignedIn: (token: string, isNew: boolean) 
     hintColor = "text-rose-700";
   }
 
-  const input =
-    "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10";
+  const input = "input mt-1.5";
 
   return (
-    <section className="mx-auto max-w-md">
+    <section className="animate-rise mx-auto grid max-w-4xl items-center gap-10 md:grid-cols-[1fr_minmax(0,26rem)] md:gap-14">
+      <div className="hidden md:block">
+        <p className="eyebrow text-accent">Word of the Day</p>
+        <p className="mt-4 font-serif text-6xl leading-none font-semibold tracking-tight">
+          sesquipedalian
+        </p>
+        <p className="mt-3 font-serif text-lg italic text-stone-500">
+          /ˌsɛs.kwɪ.pəˈdeɪ.li.ən/ &middot; adjective
+        </p>
+        <p className="mt-6 max-w-sm text-lg leading-relaxed text-stone-700">
+          Given to using long words. Become one: a new word every day, chosen around your hobbies,
+          plus a quiz to make it stick.
+        </p>
+      </div>
+
+      <div className="card p-6 sm:p-8">
       <h1 className="font-serif text-3xl font-semibold tracking-tight">
         {creating ? "Create your account" : "Welcome back"}
       </h1>
@@ -260,7 +277,7 @@ function AuthForm({ onSignedIn }: { onSignedIn: (token: string, isNew: boolean) 
 
       <form onSubmit={submit} className="mt-8 space-y-5">
         <label className="block">
-          <span className="text-sm font-medium">Username</span>
+          <span className="text-sm font-semibold text-stone-700">Username</span>
           <input
             className={input}
             value={username}
@@ -279,7 +296,7 @@ function AuthForm({ onSignedIn }: { onSignedIn: (token: string, isNew: boolean) 
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium">Password</span>
+          <span className="text-sm font-semibold text-stone-700">Password</span>
           <input
             className={input}
             type="password"
@@ -300,17 +317,9 @@ function AuthForm({ onSignedIn }: { onSignedIn: (token: string, isNew: boolean) 
           )}
         </label>
 
-        {error && (
-          <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
-            {error}
-          </p>
-        )}
+        {error && <p className="alert-error">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="w-full rounded-full bg-stone-900 px-4 py-2.5 font-medium text-stone-50 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <button type="submit" disabled={!canSubmit} className="btn-primary w-full py-3">
           {busy ? "One moment…" : creating ? "Create account" : "Sign in"}
         </button>
       </form>
@@ -323,11 +332,12 @@ function AuthForm({ onSignedIn }: { onSignedIn: (token: string, isNew: boolean) 
             setMode(creating ? "signin" : "create");
             setError(null);
           }}
-          className="font-medium text-stone-900 underline underline-offset-2"
+          className="link"
         >
           {creating ? "Sign in" : "Create an account"}
         </button>
       </p>
+      </div>
     </section>
   );
 }
@@ -344,9 +354,7 @@ export function BackgroundPicker() {
 
   return (
     <fieldset>
-      <legend className="text-xs font-medium uppercase tracking-widest text-stone-500">
-        Background color
-      </legend>
+      <legend className="eyebrow">Background color</legend>
       <div className="mt-3 grid grid-cols-4 gap-3">
         {BACKGROUNDS.map((c) => {
           const active = c.value === current;
@@ -356,14 +364,20 @@ export function BackgroundPicker() {
               type="button"
               onClick={() => choose(c.value)}
               aria-pressed={active}
-              className="flex flex-col items-center gap-1.5 text-xs text-stone-600"
+              className={`group flex flex-col items-center gap-1.5 text-xs ${
+                active ? "font-semibold text-ink" : "text-stone-600"
+              }`}
             >
               <span
-                className={`h-12 w-full rounded-xl border ${
-                  active ? "border-stone-900 ring-2 ring-stone-900" : "border-stone-300"
+                className={`grid h-12 w-full place-items-center rounded-xl ring-1 transition ${
+                  active
+                    ? "ring-2 ring-ink ring-offset-2"
+                    : "ring-black/10 group-hover:-translate-y-0.5 group-hover:shadow-md"
                 }`}
                 style={{ backgroundColor: c.value }}
-              />
+              >
+                {active && <span className="text-base text-ink">✓</span>}
+              </span>
               {c.name}
             </button>
           );
@@ -374,7 +388,7 @@ export function BackgroundPicker() {
           type="color"
           value={current}
           onChange={(e) => choose(e.target.value)}
-          className="h-9 w-12 cursor-pointer rounded border border-stone-300 bg-white"
+          className="h-9 w-12 cursor-pointer rounded-lg border-0 bg-white p-0.5 ring-1 ring-stone-300"
         />
         Or pick any color
       </label>
@@ -427,7 +441,9 @@ export function HobbiesForm({
     <form onSubmit={submit} className="space-y-3">
       {values.map((v, i) => (
         <label key={i} className="flex items-center gap-3">
-          <span className="w-5 text-right text-sm font-medium text-stone-400">{i + 1}</span>
+          <span className="grid size-7 shrink-0 place-items-center rounded-full bg-stone-100 text-xs font-semibold text-stone-500">
+            {i + 1}
+          </span>
           <input
             value={v}
             onChange={(e) => {
@@ -440,24 +456,29 @@ export function HobbiesForm({
             aria-label={`Hobby ${i + 1}`}
             maxLength={40}
             required
-            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-base outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10"
+            className="input"
           />
         </label>
       ))}
       {!unique && <p className="text-sm text-amber-700">Each hobby should be different.</p>}
-      {error && (
-        <p className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-900">
-          {error}
-        </p>
-      )}
-      <button
-        type="submit"
-        disabled={!canSubmit}
-        className="mt-3 w-full rounded-full bg-stone-900 px-4 py-2.5 font-medium text-stone-50 hover:bg-stone-700 disabled:cursor-not-allowed disabled:opacity-40"
-      >
+      {error && <p className="alert-error">{error}</p>}
+      <button type="submit" disabled={!canSubmit} className="btn-primary mt-3 w-full py-3">
         {busy ? "Saving…" : submitLabel}
       </button>
       {saved && !onSaved && <p className="text-center text-sm text-emerald-700">Saved.</p>}
     </form>
+  );
+}
+
+function StepLabel({ step }: { step: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="eyebrow">Step {step} of 2</span>
+      <span className="flex gap-1" aria-hidden>
+        {[1, 2].map((n) => (
+          <span key={n} className={`h-1 w-8 rounded-full ${n <= step ? "bg-ink" : "bg-stone-300"}`} />
+        ))}
+      </span>
+    </div>
   );
 }
