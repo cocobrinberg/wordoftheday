@@ -32,17 +32,17 @@ export default function ShareButton({ word, cardRef }: Props) {
         <svg
           viewBox="0 0 40 40"
           aria-hidden
-          className="size-10 origin-bottom drop-shadow-[0_2px_3px_rgb(28_25_23/0.18)] transition-all duration-200 ease-out group-enabled:group-hover:scale-125 group-enabled:group-hover:drop-shadow-[0_10px_14px_rgb(28_25_23/0.32)] group-focus-visible:scale-125 group-active:scale-110"
+          className="size-10 origin-bottom drop-shadow-[0_2px_3px_rgb(from_var(--ink)_r_g_b/0.18)] transition-all duration-200 ease-out group-enabled:group-hover:scale-125 group-enabled:group-hover:drop-shadow-[0_10px_14px_rgb(from_var(--ink)_r_g_b/0.32)] group-focus-visible:scale-125 group-active:scale-110"
         >
           {/* Envelope body */}
-          <rect x="3.5" y="9" width="33" height="24" rx="3.5" fill="white" stroke="rgb(28 25 23 / 0.1)" strokeWidth="1" />
+          <rect x="3.5" y="9" width="33" height="24" rx="3.5" fill="white" stroke="rgb(from var(--ink) r g b / 0.1)" strokeWidth="1" />
           {/* Fold lines */}
-          <path d="M5 31 L16 21.5 M35 31 L24 21.5" stroke="rgb(28 25 23 / 0.1)" strokeWidth="1" strokeLinecap="round" fill="none" />
+          <path d="M5 31 L16 21.5 M35 31 L24 21.5" stroke="rgb(from var(--ink) r g b / 0.1)" strokeWidth="1" strokeLinecap="round" fill="none" />
           {/* Flap: lifts a little on hover */}
           <path
             d="M5 10.5 L20 22 L35 10.5"
             fill="white"
-            stroke="rgb(28 25 23 / 0.16)"
+            stroke="rgb(from var(--ink) r g b / 0.16)"
             strokeWidth="1.2"
             strokeLinejoin="round"
             className="origin-[20px_10px] transition-transform duration-300 ease-out group-enabled:group-hover:[transform:scaleY(-0.55)]"
@@ -52,7 +52,7 @@ export default function ShareButton({ word, cardRef }: Props) {
         </svg>
         <span
           aria-hidden
-          className="pointer-events-none absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 -translate-y-1 whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink opacity-0 shadow-[0_6px_16px_-6px_rgb(28_25_23/0.35)] ring-1 ring-black/[0.06] transition-all duration-200 group-enabled:group-hover:translate-y-0 group-enabled:group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
+          className="pointer-events-none absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 -translate-y-1 whitespace-nowrap rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink opacity-0 shadow-[0_6px_16px_-6px_rgb(from_var(--ink)_r_g_b/0.35)] ring-1 ring-black/[0.06] transition-all duration-200 group-enabled:group-hover:translate-y-0 group-enabled:group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100"
         >
           Share this word
         </span>
@@ -145,10 +145,10 @@ function Letter({ word, cardRef, onClose }: { word: ShareableWord; cardRef: RefO
       play(optionsRef.current!, [{ opacity: 0, transform: "translateY(12px)" }], { duration: 0 });
 
       await play(paper, [
-        { transform: at(sx, sy, 1), boxShadow: "0 1px 2px rgb(28 25 23 / .04), 0 12px 32px -16px rgb(28 25 23 / .18)" },
-        { transform: at(sx, sy - 14, 1.015, -0.6), boxShadow: "0 30px 60px -20px rgb(28 25 23 / .45)", offset: 0.16 },
-        { transform: at(fx, ay, s, -3), boxShadow: "0 18px 30px -14px rgb(28 25 23 / .4)", offset: 0.68 },
-        { transform: at(fx, fy, s, 0), boxShadow: "0 2px 6px -2px rgb(28 25 23 / .25)" },
+        { transform: at(sx, sy, 1), boxShadow: "0 1px 2px rgb(from var(--ink) r g b / .04), 0 12px 32px -16px rgb(from var(--ink) r g b / .18)" },
+        { transform: at(sx, sy - 14, 1.015, -0.6), boxShadow: "0 30px 60px -20px rgb(from var(--ink) r g b / .45)", offset: 0.16 },
+        { transform: at(fx, ay, s, -3), boxShadow: "0 18px 30px -14px rgb(from var(--ink) r g b / .4)", offset: 0.68 },
+        { transform: at(fx, fy, s, 0), boxShadow: "0 2px 6px -2px rgb(from var(--ink) r g b / .25)" },
       ], { duration: 1500, delay: 250, easing: "cubic-bezier(.45,.05,.3,1)" });
       if (cancelled) return;
 
@@ -243,9 +243,9 @@ function Letter({ word, cardRef, onClose }: { word: ShareableWord; cardRef: RefO
       <div className="pointer-events-none relative flex h-full flex-col items-center justify-center gap-8 px-6 pt-[18vh]">
         {/* Envelope. Its parts stack around the letter: back, open flap, letter, pocket, closed flap, seal. */}
         <div ref={envRef} className="relative aspect-[1.55] w-[min(380px,calc(100vw-48px))] origin-bottom">
-          <div ref={backRef} className="absolute inset-0 z-0 rounded-[14px] bg-amber-200 shadow-[0_30px_60px_-24px_rgb(28_25_23/0.55)]" />
+          <div ref={backRef} className="absolute inset-0 z-0 rounded-[14px] bg-amber-200 shadow-[0_30px_60px_-24px_rgb(from_var(--ink)_r_g_b/0.55)]" />
           <div ref={flapRef} className="absolute inset-x-0 top-0 z-[1] h-[60%] origin-top">
-            <svg viewBox="0 0 160 60" preserveAspectRatio="none" className="size-full overflow-visible drop-shadow-[0_3px_3px_rgb(28_25_23/0.18)]">
+            <svg viewBox="0 0 160 60" preserveAspectRatio="none" className="size-full overflow-visible drop-shadow-[0_3px_3px_rgb(from_var(--ink)_r_g_b/0.18)]">
               <path d="M3 0 H157 Q160 0 157.5 2 L84 56.5 Q80 59.5 76 56.5 L2.5 2 Q0 0 3 0 Z" className="fill-amber-100 stroke-amber-300/60" strokeWidth="0.6" vectorEffect="non-scaling-stroke" />
               <path d="M14 3 L80 51 L146 3" fill="none" className="stroke-white/60" strokeWidth="1" vectorEffect="non-scaling-stroke" />
             </svg>
@@ -265,7 +265,7 @@ function Letter({ word, cardRef, onClose }: { word: ShareableWord; cardRef: RefO
           {/* Wax seal at the flap's tip */}
           <div
             ref={sealRef}
-            className="absolute top-[57%] left-1/2 z-[5] grid size-[clamp(44px,14vw,58px)] place-items-center rounded-full bg-accent shadow-[0_4px_10px_-2px_rgb(28_25_23/0.45),inset_0_-3px_6px_rgb(0_0_0/0.25),inset_0_3px_5px_rgb(255_255_255/0.3)]"
+            className="absolute top-[57%] left-1/2 z-[5] grid size-[clamp(44px,14vw,58px)] place-items-center rounded-full bg-accent shadow-[0_4px_10px_-2px_rgb(from_var(--ink)_r_g_b/0.45),inset_0_-3px_6px_rgb(0_0_0/0.25),inset_0_3px_5px_rgb(255_255_255/0.3)]"
             style={{ transform: "translate(-50%, -50%)" }}
           >
             <span className="absolute inset-[5px] rounded-full ring-1 ring-white/35" />
@@ -276,7 +276,7 @@ function Letter({ word, cardRef, onClose }: { word: ShareableWord; cardRef: RefO
         </div>
 
         <div ref={optionsRef} className={`w-full max-w-md text-center ${sealed ? "pointer-events-auto" : ""}`}>
-          <p className="font-serif text-2xl italic text-white drop-shadow-[0_1px_8px_rgb(28_25_23/0.5)]">Sealed. Where should it go?</p>
+          <p className="font-serif text-2xl italic text-white drop-shadow-[0_1px_8px_rgb(from_var(--ink)_r_g_b/0.5)]">Sealed. Where should it go?</p>
           <div className="mt-5 flex flex-wrap justify-center gap-2.5">
             <ShareLink href={`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(full)}`} onClick={() => close(true)} icon={<MailIcon />}>
               Email
@@ -306,7 +306,7 @@ function Letter({ word, cardRef, onClose }: { word: ShareableWord; cardRef: RefO
 }
 
 const pill =
-  "inline-flex items-center gap-2 rounded-full bg-white py-2 ps-2 pe-4 text-sm font-semibold text-ink shadow-[0_8px_20px_-10px_rgb(28_25_23/0.5)] ring-1 ring-black/[0.06] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-10px_rgb(28_25_23/0.55)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+  "inline-flex items-center gap-2 rounded-full bg-white py-2 ps-2 pe-4 text-sm font-semibold text-ink shadow-[0_8px_20px_-10px_rgb(from_var(--ink)_r_g_b/0.5)] ring-1 ring-black/[0.06] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_-10px_rgb(from_var(--ink)_r_g_b/0.55)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
 
 function Badge({ children }: { children: ReactNode }) {
   return <span className="grid size-7 place-items-center rounded-full bg-accent-soft text-accent">{children}</span>;

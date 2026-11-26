@@ -386,7 +386,7 @@ function StreakBoard({ rows, me }: { rows: StreakRow[]; me: string }) {
                 aria-hidden
               >
                 <span
-                  className="block h-full rounded-full bg-linear-to-r from-yellow-400 via-orange-500 to-rose-500"
+                  className="block h-full rounded-full bg-linear-to-r from-yellow-400 via-orange-500 to-orange-700"
                   style={{ width: `${(100 * r.current_streak) / top}%` }}
                 />
               </span>

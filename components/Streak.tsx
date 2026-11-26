@@ -27,21 +27,21 @@ export function Flame({ state = "lit", className = "" }: { state?: FlameState; c
   const id = `flame-${useId().replace(/:/g, "")}`;
   const [outer, inner] =
     state === "lit"
-      ? [["#fbbf24", "#f97316", "#dc2626"], ["#fef9c3", "#fde047"]]
+      ? [["var(--color-yellow-400)", "var(--color-orange-500)", "var(--color-orange-700)"], ["var(--color-yellow-100)", "var(--color-yellow-300)"]]
       : state === "waiting"
-        ? [["#fed7aa", "#fdba74", "#fb923c"], ["#fff7ed", "#ffedd5"]]
-        : [["#e7e5e4", "#d6d3d1", "#a8a29e"], ["#fafaf9", "#f5f5f4"]];
+        ? [["var(--color-orange-200)", "var(--color-orange-300)", "var(--color-orange-400)"], ["var(--color-orange-50)", "var(--color-orange-100)"]]
+        : [["var(--color-stone-200)", "var(--color-stone-300)", "var(--color-stone-400)"], ["var(--color-stone-50)", "var(--color-stone-100)"]];
   return (
     <svg viewBox="0 0 24 24" aria-hidden className={className}>
       <defs>
         <linearGradient id={`${id}-o`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={outer[0]} />
-          <stop offset=".55" stopColor={outer[1]} />
-          <stop offset="1" stopColor={outer[2]} />
+          <stop offset="0" style={{ stopColor: outer[0] }} />
+          <stop offset=".55" style={{ stopColor: outer[1] }} />
+          <stop offset="1" style={{ stopColor: outer[2] }} />
         </linearGradient>
         <linearGradient id={`${id}-i`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={inner[0]} />
-          <stop offset="1" stopColor={inner[1]} />
+          <stop offset="0" style={{ stopColor: inner[0] }} />
+          <stop offset="1" style={{ stopColor: inner[1] }} />
         </linearGradient>
       </defs>
       <path
@@ -88,7 +88,7 @@ export function StreakBadge() {
       aria-label={label}
       className={`group relative flex shrink-0 items-center gap-1 rounded-full py-1 pl-1.5 pr-2.5 text-sm font-bold tabular-nums ring-1 transition-all hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 ${
         state === "lit"
-          ? "bg-linear-to-b from-orange-50 to-orange-100 text-orange-700 ring-orange-300/70 shadow-[0_4px_14px_-6px_rgb(234_88_12/0.6)]"
+          ? "bg-linear-to-b from-orange-50 to-orange-100 text-orange-700 ring-orange-300/70 shadow-[0_4px_14px_-6px_rgb(from_var(--color-orange-600)_r_g_b/0.6)]"
           : state === "waiting"
             ? "bg-white/80 text-orange-600 ring-orange-200"
             : "bg-white/70 text-stone-400 ring-black/[0.06]"
@@ -141,7 +141,7 @@ export function StreakCard() {
     <div
       className={`relative overflow-hidden rounded-2xl p-6 ring-1 ${
         state === "lit"
-          ? "bg-linear-to-br from-orange-500 via-orange-500 to-rose-600 text-white ring-orange-600/30 shadow-[0_18px_40px_-18px_rgb(234_88_12/0.8)]"
+          ? "bg-linear-to-br from-orange-500 via-orange-500 to-orange-700 text-white ring-orange-600/30 shadow-[0_18px_40px_-18px_rgb(from_var(--color-orange-600)_r_g_b/0.8)]"
           : "card"
       }`}
     >
@@ -153,7 +153,7 @@ export function StreakCard() {
           />
           <span
             aria-hidden
-            className="pointer-events-none absolute -bottom-20 -left-10 size-48 rounded-full bg-rose-400/40 blur-3xl"
+            className="pointer-events-none absolute -bottom-20 -left-10 size-48 rounded-full bg-orange-400/40 blur-3xl"
           />
         </>
       )}
@@ -263,7 +263,7 @@ export function StreakChip({ days, className = "" }: { days: number; className?:
       title={`${days}-day streak`}
       className={`inline-flex items-center gap-0.5 rounded-full py-0.5 pl-1 pr-2 text-xs font-bold tabular-nums ring-1 ${
         hot
-          ? "bg-linear-to-b from-orange-400 to-rose-500 text-white ring-orange-500/40 shadow-[0_3px_10px_-4px_rgb(234_88_12/0.7)]"
+          ? "bg-linear-to-b from-orange-400 to-orange-600 text-white ring-orange-500/40 shadow-[0_3px_10px_-4px_rgb(from_var(--color-orange-600)_r_g_b/0.7)]"
           : "bg-orange-50 text-orange-700 ring-orange-200"
       } ${className}`}
     >

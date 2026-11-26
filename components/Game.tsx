@@ -19,13 +19,13 @@ export function StarIcon({ className = "" }: { className?: string }) {
     <svg viewBox="0 0 24 24" aria-hidden className={className}>
       <defs>
         <linearGradient id="star-g" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fde68a" />
-          <stop offset="1" stopColor="#f59e0b" />
+          <stop offset="0" style={{ stopColor: "var(--color-amber-200)" }} />
+          <stop offset="1" style={{ stopColor: "var(--color-amber-500)" }} />
         </linearGradient>
       </defs>
       <path
         fill="url(#star-g)"
-        stroke="#d97706"
+        style={{ stroke: "var(--color-amber-600)" }}
         strokeWidth="1"
         strokeLinejoin="round"
         d="m12 2.6 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9L12 2.6Z"
@@ -239,7 +239,7 @@ export function Badges() {
             key={b.name}
             className={`flex items-center gap-3 rounded-2xl p-3.5 ring-1 transition ${
               b.earned
-                ? "bg-linear-to-br from-yellow-50 to-white ring-yellow-300 shadow-[0_6px_16px_-10px_rgb(217_119_6/0.6)]"
+                ? "bg-linear-to-br from-yellow-50 to-white ring-yellow-300 shadow-[0_6px_16px_-10px_rgb(from_var(--color-amber-600)_r_g_b/0.6)]"
                 : "bg-white/50 ring-black/[0.06]"
             }`}
           >

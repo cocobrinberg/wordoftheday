@@ -266,7 +266,7 @@ export default function Quiz() {
           key={combo}
           className={`inline-flex items-center gap-1 rounded-full py-1 pr-3 pl-1.5 text-sm font-bold ${
             combo >= COMBO_AT
-              ? "animate-pop bg-linear-to-r from-orange-500 to-rose-500 text-white shadow-[0_6px_16px_-8px_rgb(234_88_12/0.8)]"
+              ? "animate-pop bg-linear-to-r from-orange-500 to-orange-700 text-white shadow-[0_6px_16px_-8px_rgb(from_var(--color-orange-600)_r_g_b/0.8)]"
               : combo > 0
                 ? "animate-pop bg-orange-50 text-orange-700 ring-1 ring-orange-200"
                 : "invisible"

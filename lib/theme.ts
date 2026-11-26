@@ -7,6 +7,8 @@
  *  - stone becomes a neutral gently tinted toward the chosen hue,
  *  - amber becomes a full accent scale in a deeper shade of that hue,
  *  - --ink (headings, primary buttons) becomes a near-black of that hue.
+ *  - the orange and yellow "game" colors (streak flames, XP, stars) follow the
+ *    accent hue too, unless the pick is already warm (butter, peach).
  * Neutral picks (white, sand) keep the default warm-amber look.
  */
 
@@ -38,13 +40,23 @@ const STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
 const NEUTRAL_L = [0.985, 0.97, 0.923, 0.869, 0.709, 0.553, 0.444, 0.374, 0.268, 0.216, 0.147];
 const ACCENT_L = [0.982, 0.955, 0.91, 0.855, 0.78, 0.7, 0.6, 0.5, 0.43, 0.37, 0.26];
 const ACCENT_C = [0.02, 0.05, 0.095, 0.13, 0.15, 0.16, 0.155, 0.14, 0.12, 0.1, 0.07];
+// Brighter, punchier scales for the game colors, modelled on Tailwind's orange and yellow.
+const GAME_L = [0.98, 0.954, 0.901, 0.837, 0.75, 0.68, 0.6, 0.52, 0.45, 0.4, 0.27];
+const GAME_C = [0.016, 0.04, 0.08, 0.13, 0.18, 0.2, 0.2, 0.17, 0.14, 0.11, 0.08];
+const GLOW_L = [0.987, 0.973, 0.945, 0.905, 0.852, 0.795, 0.681, 0.554, 0.476, 0.421, 0.286];
+const GLOW_C = [0.026, 0.06, 0.1, 0.14, 0.16, 0.16, 0.14, 0.12, 0.1, 0.08, 0.06];
 
 export const THEME_VARS = [
   "--page-bg",
   "--ink",
   "--accent",
   "--accent-soft",
-  ...STEPS.flatMap((s) => [`--color-stone-${s}`, `--color-amber-${s}`]),
+  ...STEPS.flatMap((s) => [
+    `--color-stone-${s}`,
+    `--color-amber-${s}`,
+    `--color-orange-${s}`,
+    `--color-yellow-${s}`,
+  ]),
 ];
 
 /** CSS variables for a background color; null values fall back to the stylesheet. */
@@ -67,6 +79,14 @@ export function themeFor(hex: string): Record<string, string | null> {
     vars[`--color-stone-${step}`] = css(NEUTRAL_L[i], tint * (i < 2 ? 0.6 : 1), h);
     vars[`--color-amber-${step}`] = css(ACCENT_L[i], ACCENT_C[i], accentH);
   });
+  // Warm picks already match the default orange/yellow; others get their own.
+  const warm = h >= 40 && h <= 115;
+  if (!warm) {
+    STEPS.forEach((step, i) => {
+      vars[`--color-orange-${step}`] = css(GAME_L[i], GAME_C[i], accentH);
+      vars[`--color-yellow-${step}`] = css(GLOW_L[i], GLOW_C[i], (accentH + 25) % 360);
+    });
+  }
   vars["--ink"] = css(0.22, 0.035, h);
   vars["--accent"] = css(ACCENT_L[7], ACCENT_C[7], accentH);
   vars["--accent-soft"] = css(ACCENT_L[1], ACCENT_C[1], accentH);
