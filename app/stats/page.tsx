@@ -17,8 +17,6 @@ import { Flame, StreakCard, StreakChip } from "@/components/Streak";
 import { Badges, LevelCard } from "@/components/Game";
 import { fetchStreaks, type StreakRow } from "@/lib/streak";
 
-/** Answers needed before someone shows up on the leaderboard. */
-const MIN_TO_RANK = 5;
 /** How often the open Stats page reloads the leaderboard. */
 const BOARD_REFRESH_MS = 10_000;
 
@@ -269,19 +267,21 @@ function Leaderboard({
   me: string;
 }) {
   const [view, setView] = useState<"accuracy" | "streaks">("accuracy");
-  // Everyone is listed. People with enough answers are ranked by accuracy;
-  // the rest follow, most answers first, until they've answered enough.
+  // Everyone is listed. Anyone who has answered at least one question is
+  // ranked by accuracy; people with no answers yet follow, unranked.
   const all = rows.some((r) => r.username === me)
     ? rows
     : [...rows, { username: me, right_count: 0, total: 0, percent: 0 }];
-  const ranked = all.filter((r) => r.total >= MIN_TO_RANK);
+  const ranked = all
+    .filter((r) => r.total > 0)
+    .sort((a, b) => b.percent - a.percent || b.total - a.total || a.username.localeCompare(b.username));
   const unranked = all
-    .filter((r) => r.total < MIN_TO_RANK)
-    .sort((a, b) => b.total - a.total || a.username.localeCompare(b.username));
+    .filter((r) => r.total === 0)
+    .sort((a, b) => a.username.localeCompare(b.username));
   const everyone = [...ranked, ...unranked];
   const rk = ranks(ranked, (a, b) => a.percent === b.percent && a.total === b.total);
   const mine = all.find((r) => r.username === me);
-  const needed = MIN_TO_RANK - (mine?.total ?? 0);
+  const noAnswers = (mine?.total ?? 0) === 0;
   const streakOf = new Map((streaks ?? []).map((s) => [s.username, s]));
   const onFire = (streaks ?? []).filter((s) => s.current_streak > 0);
   const showStreaks = streaks !== null && view === "streaks";
@@ -296,7 +296,7 @@ function Leaderboard({
           <p className="mt-1 text-sm text-stone-600">
             {showStreaks
               ? "Everyone with a streak going, ranked by days in a row."
-              : `Everyone playing, ranked by percentage right once they've answered ${MIN_TO_RANK} questions. Updates live.`}
+              : "Everyone playing, ranked by percentage right. Updates live."}
           </p>
         </div>
         {streaks !== null && (
@@ -334,11 +334,7 @@ function Leaderboard({
         )
       ) : (
         <>
-          {needed > 0 && (
-            <p className="alert-note mt-5">
-              Answer {needed} more {needed === 1 ? "question" : "questions"} to get a rank.
-            </p>
-          )}
+          {noAnswers && <p className="alert-note mt-5">Answer a quiz question to get a rank.</p>}
           {everyone.length === 0 ? (
             <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
           ) : (
@@ -346,7 +342,6 @@ function Leaderboard({
               {everyone.map((r, i) => {
                 const isMe = r.username === me;
                 const rank = i < ranked.length ? rk[i] : null;
-                const toGo = MIN_TO_RANK - r.total;
                 return (
                   <li
                     key={r.username}
@@ -372,9 +367,7 @@ function Leaderboard({
                     </span>
                     <span className="text-right">
                       {rank === null ? (
-                        <span className="block text-xs">
-                          {toGo} more to rank
-                        </span>
+                        <span className="block text-xs">No answers yet</span>
                       ) : (
                         <span className="block font-semibold tabular-nums">{fmt(r.percent)}</span>
                       )}
