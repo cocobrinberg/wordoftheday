@@ -5,6 +5,8 @@ import type { Word } from "@/lib/supabase";
 import { ISEE_WORDS } from "@/lib/iseeWords";
 import { Loading } from "@/components/Status";
 import { useAccount } from "@/components/Account";
+import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
+import { AnswerName, WordLabel, useWordTranslations } from "@/components/TranslatedWord";
 
 type Question = { target: Word; choices: Word[] };
 
@@ -77,6 +79,8 @@ export default function IseePrep() {
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState({ right: 0, total: 0 });
   const [counts, setCounts] = useState({ seen: 0, missed: 0 });
+  const [lang, setLang] = useLanguage();
+  const translations = useWordTranslations(question?.choices ?? [], lang);
 
   function save() {
     const p = progress.current;
@@ -101,7 +105,7 @@ export default function IseePrep() {
   }, [account.username]);
 
   function answer(choice: Word) {
-    if (!question || picked !== null) return;
+    if (!question || picked !== null || translations.loading) return;
     const id = question.target.id;
     const correct = choice.id === id;
     setPicked(choice.id);
@@ -145,8 +149,15 @@ export default function IseePrep() {
             <span className="font-serif text-lg font-semibold text-ink tabular-nums">{score.right}</span>
             <span className="tabular-nums">/ {score.total}</span>
           </p>
+          <LanguagePicker value={lang} onChange={setLang} />
         </div>
       </div>
+
+      {translations.error && (
+        <p className="mt-6 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          Couldn&rsquo;t translate into {lang.name} right now ({translations.error}). Showing English.
+        </p>
+      )}
 
       <div key={question.target.id} className="card animate-rise mt-8 px-6 py-7 sm:px-8 sm:py-9">
         <p className="eyebrow">Which word means&hellip;</p>
@@ -177,7 +188,7 @@ export default function IseePrep() {
               <button
                 type="button"
                 onClick={() => answer(c)}
-                disabled={answered}
+                disabled={answered || translations.loading}
                 className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-2 shadow-sm transition disabled:cursor-default ${style}`}
               >
                 <span
@@ -189,7 +200,11 @@ export default function IseePrep() {
                       ? "✕"
                       : "ABCD"[i]}
                 </span>
-                <span className="font-serif text-xl font-medium">{c.word}</span>
+                {translations.loading ? (
+                  <span className="h-6 w-28 animate-pulse rounded-md bg-stone-200" aria-label="Translating…" />
+                ) : (
+                  <WordLabel word={c} translation={translations.get(c)} lang={lang} revealEnglish={answered} />
+                )}
               </button>
             </li>
           );
@@ -211,7 +226,7 @@ export default function IseePrep() {
             ) : (
               <>
                 Not quite. The answer is{" "}
-                <strong className="font-serif font-semibold">{question.target.word}</strong>.
+                <AnswerName word={question.target} translation={translations.get(question.target)} lang={lang} />.
               </>
             )}
           </p>

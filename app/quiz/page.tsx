@@ -17,6 +17,8 @@ import { noteAnswerToday } from "@/lib/streak";
 import { awardAnswer, COMBO_AT } from "@/lib/xp";
 import { Confetti, LevelBadge } from "@/components/Game";
 import { Flame } from "@/components/Streak";
+import LanguagePicker, { useLanguage } from "@/components/LanguagePicker";
+import { AnswerName, WordLabel, useWordTranslations } from "@/components/TranslatedWord";
 
 type Question = { target: Word; choices: Word[] };
 
@@ -127,6 +129,8 @@ export default function Quiz() {
   const [gain, setGain] = useState<{ points: number; key: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [lang, setLang] = useLanguage();
+  const translations = useWordTranslations(question?.choices ?? [], lang);
 
   useEffect(() => {
     Promise.all([fetchWordsThroughToday(), fetchAttempts(token)])
@@ -147,7 +151,7 @@ export default function Quiz() {
   }, [token, account.username]);
 
   async function answer(choice: Word) {
-    if (!question || picked !== null) return;
+    if (!question || picked !== null || translations.loading) return;
     const correct = choice.id === question.target.id;
     const nextCombo = correct ? combo + 1 : 0;
     setPicked(choice.id);
@@ -231,13 +235,20 @@ export default function Quiz() {
           <p className="eyebrow text-accent">Practice</p>
           <h1 className="page-title mt-2">Quiz</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Link href="/stats" className="link mr-1 text-sm">
             Your stats
           </Link>
           <LevelBadge className="flex md:hidden" />
+          <LanguagePicker value={lang} onChange={setLang} />
         </div>
       </div>
+
+      {translations.error && (
+        <p className="mt-6 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          Couldn&rsquo;t translate into {lang.name} right now ({translations.error}). Showing English.
+        </p>
+      )}
 
       {/* Round progress: one segment per question. */}
       <div className="mt-8 flex items-center gap-3">
@@ -319,7 +330,7 @@ export default function Quiz() {
               <button
                 type="button"
                 onClick={() => answer(c)}
-                disabled={answered}
+                disabled={answered || translations.loading}
                 className={`group flex w-full items-center gap-4 rounded-2xl px-4 py-4 text-left ring-2 transition disabled:cursor-default ${style}`}
               >
                 <span
@@ -327,7 +338,11 @@ export default function Quiz() {
                 >
                   {answered && isAnswer ? "✓" : answered && isPick ? "✕" : "ABCD"[i]}
                 </span>
-                <span className="font-serif text-xl font-medium">{c.word}</span>
+                {translations.loading ? (
+                  <span className="h-6 w-28 animate-pulse rounded-md bg-stone-200" aria-label="Translating…" />
+                ) : (
+                  <WordLabel word={c} translation={translations.get(c)} lang={lang} revealEnglish={answered} />
+                )}
               </button>
               {isPick && gain && (
                 <>
@@ -366,7 +381,7 @@ export default function Quiz() {
             ) : (
               <>
                 Not quite. The answer is{" "}
-                <strong className="font-serif font-semibold">{question.target.word}</strong>.
+                <AnswerName word={question.target} translation={translations.get(question.target)} lang={lang} />.
               </>
             )}
           </p>
