@@ -267,6 +267,7 @@ function Leaderboard({
   me: string;
 }) {
   const [view, setView] = useState<"accuracy" | "streaks">("accuracy");
+  const [expanded, setExpanded] = useState(false);
   // Everyone is listed. Anyone who has answered at least one question is
   // ranked by accuracy; people with no answers yet follow, unranked.
   const all = rows.some((r) => r.username === me)
@@ -339,7 +340,7 @@ function Leaderboard({
             <p className="card mt-5 p-6 text-center text-stone-600">Nobody is on the leaderboard yet.</p>
           ) : (
             <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
-              {everyone.map((r, i) => {
+              {(expanded ? everyone : everyone.slice(0, TOP)).map((r, i) => {
                 const isMe = r.username === me;
                 const rank = i < ranked.length ? rk[i] : null;
                 return (
@@ -380,18 +381,44 @@ function Leaderboard({
               })}
             </ol>
           )}
+          <ShowMore total={everyone.length} expanded={expanded} onToggle={() => setExpanded((e) => !e)} />
         </>
       )}
     </section>
   );
 }
 
+/** Rows shown on a leaderboard before "Show more". */
+const TOP = 5;
+
+/** Expands or collapses a leaderboard past its top five. */
+function ShowMore({ total, expanded, onToggle }: { total: number; expanded: boolean; onToggle: () => void }) {
+  if (total <= TOP) return null;
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={expanded} className="btn-secondary mt-4 w-full py-3 text-sm">
+      {expanded ? "Show less" : `Show more (${total - TOP})`}
+      <svg
+        viewBox="0 0 20 20"
+        aria-hidden
+        className={`size-4 transition-transform ${expanded ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2.5}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="m5 7.5 5 5 5-5" />
+      </svg>
+    </button>
+  );
+}
+
 function StreakBoard({ rows, me }: { rows: StreakRow[]; me: string }) {
+  const [expanded, setExpanded] = useState(false);
   const rk = ranks(rows, (a, b) => a.current_streak === b.current_streak);
   const top = rows[0].current_streak;
   return (
+    <>
     <ol className="mt-5 card overflow-hidden divide-y divide-stone-200/70">
-      {rows.map((r, i) => {
+      {(expanded ? rows : rows.slice(0, TOP)).map((r, i) => {
         const isMe = r.username === me;
         return (
           <li
@@ -432,5 +459,7 @@ function StreakBoard({ rows, me }: { rows: StreakRow[]; me: string }) {
         );
       })}
     </ol>
+    <ShowMore total={rows.length} expanded={expanded} onToggle={() => setExpanded((e) => !e)} />
+    </>
   );
 }
